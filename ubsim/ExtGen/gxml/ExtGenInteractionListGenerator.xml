@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!--
+Configuration sets for genie::ubext::ExtGenInteractionListGenerator (ubsim/ExtGen)
+
+One CC and one NC interaction per (neutrino, target) initial state. No
+configurable parameters.
+-->
+
+<alg_conf>
+  <param_set name="Default">
+  </param_set>
+</alg_conf>

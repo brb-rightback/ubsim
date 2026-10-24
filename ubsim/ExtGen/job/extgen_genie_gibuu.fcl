@@ -1,0 +1,22 @@
+#
+# GENIE settings shared by all ExtGen GiBUU request jobs (ubsim/ExtGen).
+#
+# GENIE selects neutrino, target, current, energy and vertex with GiBUU's
+# total cross sections (tune GB25_05a_00_000); the final state is produced
+# later by GiBUU. GXMLPATH points only at the ExtGen GENIE configuration,
+# which overrides GENIE's master_config.xml and EventGenerator.xml and so
+# must never be on FW_SEARCH_PATH.
+#
+# Usage, with a GENIEGen module as physics.producers.generator (see
+# extgen_requests_test_bnb.fcl):
+#   physics.producers.generator.TuneName:           @local::extgen_gibuu_tune
+#   physics.producers.generator.GXMLPATH:           @local::extgen_gibuu_gxmlpath
+#   physics.producers.generator.EventGeneratorList: @local::extgen_gibuu_eventgenlist
+
+BEGIN_PROLOG
+
+extgen_gibuu_tune:        "GB25_05a_00_000"
+extgen_gibuu_gxmlpath:    "$UBSIM_DIR/gxml"
+extgen_gibuu_eventgenlist: "Default"
+
+END_PROLOG

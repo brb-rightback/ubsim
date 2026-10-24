@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!--
+Configuration sets for genie::ubext::ExtGenPXSec (ubsim/ExtGen)
+
+Total CC/NC cross sections of an external neutrino generator. GENIE normally
+reads them from the spline file; the text table is only read if a spline is
+missing (see ExtGenPXSec.h for the table format).
+
+Configurable Parameters:
+.....................................................................................
+Name                Type     Optional   Comment                         Default
+ExtGen-XSecTable    string   No         cross section table (text)      CommonParam[ExtGen]
+.....................................................................................
+-->
+
+<alg_conf>
+  <param_set name="Default">
+    <param type="string" name="CommonParam"> ExtGen </param>
+  </param_set>
+</alg_conf>

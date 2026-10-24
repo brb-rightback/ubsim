@@ -1,0 +1,78 @@
+#
+# ExtGen phase-1 test: GENIE request generation (step A) for BNB in
+# volCryostat with the ExtGen GiBUU tune and PLACEHOLDER splines.
+#
+# Only tests the GENIE side (plugin loading, splines, flux/geometry). Each
+# event holds MCTruth(s) with only the neutrino and the target nucleus.
+#
+# Run (after making the placeholder splines, see ubsim/ExtGen/README):
+#   lar -c extgen_requests_test_bnb.fcl -n 20
+# with the spline file given by an override line such as
+#   physics.producers.generator.XSecTable: "/abs/path/extgen_placeholder_splines.xml"
+
+#include "services_microboone.fcl"
+#include "genie_microboone_default+MEC.fcl"
+#include "extgen_genie_gibuu.fcl"
+
+process_name: ExtGenRequests
+
+services:
+{
+  scheduler:    { defaultExceptions: false }
+  TFileService: { fileName: "extgen_requests_hist.root" }
+  TimeTracker:  {}
+  MemoryTracker: {}
+  RandomNumberGenerator: {}
+  FileCatalogMetadata:  @local::art_file_catalog_mc
+  @table::microboone_gen_services
+  IFDH:         {}    # used by GENIEHelper for the flux files
+}
+
+source:
+{
+  module_type: EmptyEvent
+  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+  maxEvents:   20
+  firstRun:    1
+  firstEvent:  1
+}
+
+physics:
+{
+  producers:
+  {
+    generator: @local::microboone_genie_simple
+    rns:       { module_type: "RandomNumberSaver" }
+  }
+  simulate:      [ rns, generator ]
+  stream1:       [ out1 ]
+  trigger_paths: [ simulate ]
+  end_paths:     [ stream1 ]
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "extgen_requests_test.root"
+    dataTier:    "generated"
+    compressionLevel: 1
+  }
+}
+
+# Same beam/geometry settings as standard_overlay_gen_griddriver.fcl (run 4c).
+# The flux is the default microboone_genie_simple set,
+# bnb_gsimple_fluxes_01.09.2019_463/converted_beammc_wincorr*.root; the run4a
+# set (standard_overlay_gen_griddriver_run4a.fcl) is only for run 4a.
+physics.producers.generator.GlobalTimeOffset: 3125.
+physics.producers.generator.RandomTimeOffset: 1600.
+physics.producers.generator.TopVolume:        "volCryostat"
+physics.producers.generator.BeamName:         "booster"
+physics.producers.generator.FluxCopyMethod:   "DIRECT"
+
+# ExtGen GiBUU tune
+physics.producers.generator.TuneName:           @local::extgen_gibuu_tune
+physics.producers.generator.GXMLPATH:           @local::extgen_gibuu_gxmlpath
+physics.producers.generator.EventGeneratorList: @local::extgen_gibuu_eventgenlist
+physics.producers.generator.XSecTable:          "extgen_placeholder_splines.xml"  # override with an absolute path

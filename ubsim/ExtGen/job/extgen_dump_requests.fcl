@@ -1,0 +1,37 @@
+#
+# ExtGen step B: write the interactions chosen by GENIE in step A as a
+# request file for the external generator (format: ExtGenRequestDumper).
+#
+#   lar -c extgen_dump_requests.fcl -s stepA.root
+#
+# For a human-readable dump of the same events use larsim's dump_mctruth.fcl.
+
+#include "messageservice.fcl"
+
+process_name: ExtGenDumpRequests
+
+services:
+{
+  message: @local::standard_info
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1
+}
+
+physics:
+{
+  analyzers:
+  {
+    dumprequests:
+    {
+      module_type: ExtGenRequestDumper
+      InputTruth:  "generator"
+      OutputFile:  "requests.txt"
+    }
+  }
+  dump:      [ dumprequests ]
+  end_paths: [ dump ]
+}
