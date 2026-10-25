@@ -6,9 +6,10 @@ Each job scans every energy of extgen_gibuu_energies.txt with `trials`
 trials (extgen_gibuu_scan_grid.sh picks its line by $PROCESS). Statistics of
 all jobs of a channel are added by extgen_gibuu_tables.py, so a channel's
 precision is set by its number of jobs. The relative error of a point
-scales as 1/sqrt(jobs x trials); in local tests one trial has an rms of
-~3-15 times sigma (Ar40 numu CC, 3-0.5 GeV), so one job of 20000 trials gives
-~2-10% and 100 jobs ~0.2-1%.
+scales as 1/sqrt(jobs x trials); in the grid pilot (Ar40 numu CC, 20 jobs
+of 20000 trials, ~1 h each) one job gave ~16% at 0.15 GeV, 13% at 0.3 GeV,
+7% at 1 GeV and 3-5% above 2 GeV, so 100 jobs give ~1.8%, 1.3%, 0.7% and
+0.3-0.5%.
 
 Default tiers (jobs per channel), by share of the BNB interactions in
 volCryostat (Ar40 ~89%, numu ~98%):
