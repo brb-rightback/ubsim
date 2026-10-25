@@ -8,8 +8,9 @@ energy band, observed/expected trial-weight sums and the pull.
 REPORT may be a report file or a directory searched recursively for
 extgen_xsec_check.txt. The expected sums' table errors are added linearly
 over jobs (they share the table), the observed variances in quadrature.
-Exit code 1 if a channel total has |pull| > --fail-pull or is missing from the
-table in any job.
+Exit code 1 if a channel total has |pull| > --fail-pull, is missing from the
+table in any job, or a channel or band has requests but no table prediction
+(energies outside the table).
 
 Works with python 2.7 and python 3.
 """
@@ -68,6 +69,10 @@ def main():
     for key in sorted(tot, key=lambda k: (k[0], int(k[1]), k[2], k[3] != "all", k[3])):
         nreq, ntr, obs, exp, var, experr = tot[key]
         if exp <= 0:
+            # requests outside the table's energy range
+            print("%-11s %4s %2s %-6s %8d %11d   no table prediction (obs %.4g)  <-- FAIL" %
+                  (key[0], key[1], key[2], key[3], nreq, ntr, obs))
+            bad = True
             continue
         d = math.sqrt(var + experr ** 2)
         pull = (obs - exp) / d if d > 0 else 0.0

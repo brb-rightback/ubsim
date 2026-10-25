@@ -10,7 +10,10 @@
 # Run as a project.py <initscript> (condor_lar.sh --init-script): it runs in
 # the job's work directory after the release is set up and before the stage
 # fcls (extgen_overlay_SimInfoMixer.fcl, g4, ...). Any failure exits non-zero,
-# which ends the job before the mixer.
+# or with --soft-fail (grid XMLs) exits 0: condor_lar.sh ends a job at once,
+# without its log tarball, when the <initscript> fails; with --soft-fail there
+# is no genfile.root.local, so the mixer stage fails and the job ends the
+# normal way, logs (extgen_job_summary.txt) included.
 #
 # Two ways to set the number of generator events N:
 #   --nevents N      fixed: everything runs in the <initscript>. N must be at
@@ -29,7 +32,7 @@
 #       (--tables STEM | --spline XML [--xsec-table TXT] (--max-table TXT | --flat-max MAX))
 #       [--margin 3] [--floor 50] [--ensembles 1000] [--retries 2]
 #       [--warn-pull 4] [--fail-pull 8] [--allow-missing-xsec] [--allow-build-mismatch]
-#       [--seeds GENIE,MERGE,GIBUU]
+#       [--seeds GENIE,MERGE,GIBUU] [--soft-fail]
 #
 #   FCL        step-A fcl, e.g. extgen_requests_bnb_run4c.fcl
 #   N          step-A events (= interactions, one per subrun); must be at least
@@ -48,6 +51,7 @@
 #   /pnfs paths are copied with ifdh.
 #   --seeds    reuse the seeds of an earlier job (from its extgen_job_summary.txt);
 #              by default each job draws its seeds from /dev/urandom
+#   --soft-fail exit 0 after a failure (see above); for the <initscript>
 #   extgen_gibuu_grid_init.sh --continue
 #              second half of --nevents auto (see above); N = events of the
 #              newest art file in the work directory, counted by the copy
@@ -87,6 +91,7 @@ fail() {
   note "end $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   rm -f "$TOP/genfile.root.local"
   save_logs
+  [ "${SOFT:-0}" -eq 1 ] && { log "--soft-fail: exit 0, the mixer stage will fail"; exit 0; }
   exit 1
 }
 
@@ -132,10 +137,11 @@ lar_events() {  # number of events lar processed, from its log
 # --- options
 STEPA= NEV= TARBALL= MD5= STEM= SPLINE= XSEC= MAXTAB= FLAT=
 MARGIN=3 FLOOR=50 ENS=1000 RETRIES=2 WARN=4 FAILPULL=8
-ALLOW_MISSING=0 ALLOW_MISMATCH=0 SEEDS= CONTINUE=0
+ALLOW_MISSING=0 ALLOW_MISMATCH=0 SEEDS= CONTINUE=0 SOFT=0
 while [ $# -gt 0 ]; do
   case $1 in
     --continue) CONTINUE=1; shift ;;
+    --soft-fail) SOFT=1; shift ;;
     --stepa-fcl) STEPA=$2; shift 2 ;;
     --nevents) NEV=$2; shift 2 ;;
     --gibuu-tarball) TARBALL=$2; shift 2 ;;
@@ -227,10 +233,14 @@ tar -xzf "$TAR_F" -C "$WORK/gibuu" || fail "cannot unpack $TAR_F"
 GIBUU_COMMIT=$(awk '/^commit:/ {print $2}' "$WORK/gibuu/BUILD_INFO")
 GIBUU_MD5=$(awk '/^GiBUU.x md5:/ {print $3}' "$WORK/gibuu/BUILD_INFO")
 note "gibuu_tarball $TARBALL md5 $md5 commit $GIBUU_COMMIT binary_md5 $GIBUU_MD5"
-# the tables must come from this GiBUU build
+[[ "$GIBUU_MD5" =~ ^[0-9a-f]{32}$ ]] || fail "no GiBUU.x md5 in the tarball's BUILD_INFO"
+# the tables must come from this GiBUU build: one of the commit/md5 entries of
+# their build line has exactly this binary md5
 for t in ${MAX_F:-} $XSEC_F; do
   if grep -q "^# GiBUU build(s):" "$t"; then
-    if ! grep "^# GiBUU build(s):" "$t" | grep -q "/$GIBUU_MD5"; then
+    if ! awk -v m="$GIBUU_MD5" '/^# GiBUU build\(s\):/ {
+           for (i = 4; i <= NF; i++) { x = $i; gsub(/,/, "", x); sub(/.*\//, "", x); if (x == m) f = 1 } }
+         END { exit !f }' "$t"; then
       [ "$ALLOW_MISMATCH" -eq 1 ] || fail "$t was made with another GiBUU build than $GIBUU_MD5"
       note "warning: $t from another GiBUU build (--allow-build-mismatch)"
     fi
@@ -276,8 +286,8 @@ else  # --continue
   if command -v samweb > /dev/null && [ -s consumed_files.list ]; then
     for f in $(cat consumed_files.list); do
       sc=$(samweb get-metadata "$f" 2> /dev/null | awk '/^ *Event Count:/ {print $3}')
-      if [ -z "$sc" ]; then
-        note "sam_event_count $f unknown"
+      if ! [[ "$sc" =~ ^[0-9]+$ ]]; then
+        note "sam_event_count $f unknown ('$sc')"
       elif [ "$sc" -ne "$NEV" ]; then
         note "warning: sam event_count $sc for $f, the copy has $NEV (using $NEV)"
       else

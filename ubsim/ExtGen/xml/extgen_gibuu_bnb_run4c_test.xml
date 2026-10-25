@@ -51,7 +51,7 @@
     <inputdef>&ext_samdef;</inputdef>
 
     <!-- steps A-D; files passed with jobsub -f are found in $CONDOR_DIR_INPUT -->
-    <initscript>extgen_gibuu_grid_init.sh --stepa-fcl extgen_requests_bnb_run4c.fcl --nevents &nevents; --gibuu-tarball &extgen_dir;/&gibuu_tar; --gibuu-md5 &gibuu_md5; --tables &tables;</initscript>
+    <initscript>extgen_gibuu_grid_init.sh --stepa-fcl extgen_requests_bnb_run4c.fcl --nevents &nevents; --gibuu-tarball &extgen_dir;/&gibuu_tar; --gibuu-md5 &gibuu_md5; --tables &tables; --soft-fail</initscript>
 
     <fcl>extgen_overlay_SimInfoMixer.fcl</fcl>
     <fcl>wirecell_g4_uboone.fcl</fcl>

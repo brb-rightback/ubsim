@@ -40,6 +40,8 @@ done
 [ -n "$TS" ] && [ -n "$XS" ] && [ -n "$OUT" ] || die "give -t, -x and -o"
 [ -f "$TS" ] || die "$TS not found"
 [ -f "$XS" ] || die "$XS not found"
+# an empty table would make awk read trial_stats as the table (FNR == NR)
+awk '!/^#/ && NF >= 5 { n++ } END { exit !n }' "$XS" || die "$XS has no table rows"
 
 status=0
 awk -v warn="$WARN" -v fail="$FAIL" -v allow="$ALLOW_MISSING" \
