@@ -1,6 +1,8 @@
 #
 # Module configurations of the ExtGen chain (generator-neutral).
 
+#include "microboone_siminfomixer.fcl"
+
 BEGIN_PROLOG
 
 # Step B: request file from the step-A MCTruths
@@ -21,5 +23,28 @@ extgen_merge:
   RandomAzimuth:    true    # extra random rotation about the neutrino direction
   RequireAllServed: true    # every served event must be used
 }
+
+# Overlay: SimInfoMixer putting the merged interactions onto EXT events.
+# The standard microboone_siminfomixer, reading the ExtGenMerge products.
+# POT: the merged file has one event per subrun (step A:
+# numberEventsInSubRun 1) and its POT per event as potinevent:SubRunPOT.
+# AuxHasSeparateGenG4 makes the mixer charge each mixed event the POT of its
+# own subrun (MakePOTMap: subrun POT / events in it = that event's POT)
+# instead of the file's POT / events in the file (default), so the POT is
+# exact even when only some generator events are mixed. The flag's other
+# effect, on MCTruth-MCParticle associations, needs MCTruthInputModuleLabels
+# empty and MCParticle associations to mix, neither of which is the case
+# here; MCTruthMCParticleAssnsMCTruthLookupLabel is required by the flag but
+# not used. Checked by the mixer closure test (ExtGenMixCheck).
+extgen_siminfomixer: @local::microboone_siminfomixer
+extgen_siminfomixer.MCTruthInputModuleLabels:            [ "generator::ExtGenMerge" ]
+extgen_siminfomixer.MCFluxInputModuleLabels:             [ "generator::ExtGenMerge" ]
+extgen_siminfomixer.GTruthInputModuleLabels:             [ "generator::ExtGenMerge" ]
+extgen_siminfomixer.BeamGateInputModuleLabels:           [ "generator::ExtGenMerge" ]
+extgen_siminfomixer.MCTruthMCFluxAssnsInputModuleLabels: [ "generator::ExtGenMerge" ]
+extgen_siminfomixer.MCTruthGTruthAssnsInputModuleLabels: [ "generator::ExtGenMerge" ]
+extgen_siminfomixer.POTSummaryTag:                       "potinevent:SubRunPOT"
+extgen_siminfomixer.AuxHasSeparateGenG4:                 true
+extgen_siminfomixer.MCTruthMCParticleAssnsMCTruthLookupLabel: [ "generator::ExtGenMerge" ]
 
 END_PROLOG

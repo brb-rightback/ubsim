@@ -1,0 +1,27 @@
+#
+# GENIE closure test (V2(b)): the production mixer job
+# (extgen_overlay_SimInfoMixer.fcl) on an EXT file, with the merged closure
+# file as the generator file, plus ExtGenMixCheck, which checks that every
+# mixed event carries the next merged interaction unchanged and that the
+# mixer's POT for every EXT subrun is exactly that of the events mixed into
+# it (ledger from extgen_closure_merge.fcl).
+#
+#   lar -c extgen_closure_mix.fcl -s <EXT run 4c file>
+
+#include "extgen_overlay_SimInfoMixer.fcl"
+
+physics.filters.generator.SimInputFileNames: [ "extgen_closure_merged.root" ]
+
+physics.analyzers.mixcheck:
+{
+  module_type:  ExtGenMixCheck
+  Mode:         "check"
+  Truth:        "generator::SimInfoMixer"
+  POT:          "generator::SimInfoMixer"
+  LedgerFile:   "extgen_closure_mix_ledger.txt"
+  SelectEvents: [ "mixer_path" ]
+}
+physics.check:     [ mixcheck ]
+physics.end_paths: [ output, check ]
+
+outputs.out.fileName: "extgen_closure_mixed.root"

@@ -2,6 +2,8 @@
 # GENIE closure test (V2), step D: the production merge job
 # (extgen_merge.fcl) plus ExtGenClosureCheck, which compares every merged
 # interaction with GENIE's original and fails the job on any difference.
+# ExtGenMixCheck (ledger mode) writes extgen_closure_mix_ledger.txt for the
+# mixer test (extgen_closure_mix.fcl).
 #
 #   lar -c extgen_closure_merge.fcl -s extgen_closure_stepA.root
 #
@@ -23,7 +25,15 @@ physics.analyzers.closurecheck:
   MergedTruth:   "generator::ExtGenMerge"
   RandomAzimuth: false
 }
-physics.check:     [ closurecheck ]
+physics.analyzers.mixledger:
+{
+  module_type: ExtGenMixCheck
+  Mode:        "ledger"
+  Truth:       "generator::ExtGenMerge"
+  POT:         "potinevent:SubRunPOT"
+  LedgerFile:  "extgen_closure_mix_ledger.txt"
+}
+physics.check:     [ closurecheck, mixledger ]
 physics.end_paths: [ stream1, check ]
 
 outputs.out1.fileName: "extgen_closure_merged.root"

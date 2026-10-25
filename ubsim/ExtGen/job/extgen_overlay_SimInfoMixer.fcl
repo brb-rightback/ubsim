@@ -1,0 +1,68 @@
+#
+# ExtGen overlay: puts the merged interactions (extgen_merge.fcl output) onto
+# EXT events with SimInfoMixer. Same job as the standard
+# standard_overlay_gen_SimInfoMixer_prod.fcl, with the mixer reading the
+# ExtGenMerge products and charging each mixed event its exact POT (see
+# extgen_siminfomixer in extgen_modules.fcl).
+#
+#   lar -c extgen_overlay_SimInfoMixer.fcl -s <EXT file>
+#
+# The merged file is read as genfile.root.local (grid convention); for a
+# local test override physics.filters.generator.SimInputFileNames.
+# Generator events are used in order, one per EXT event; EXT events left over
+# when they run out are dropped.
+
+#include "time_memory_tracker_microboone.fcl"
+#include "services_microboone.fcl"
+#include "extgen_modules.fcl"
+#include "local_gen_include.fcl"
+
+services:
+{
+  scheduler:             { defaultExceptions: false }
+  TFileService:          { fileName: "gen_hist.root" }
+  TimeTracker:           @local::microboone_time_tracker
+  MemoryTracker:         @local::microboone_memory_tracker
+  RandomNumberGenerator: {}
+  FileCatalogMetadata:   @local::art_file_catalog_mc
+  @table::microboone_g4_services
+}
+
+process_name: SimInfoMixer   # must not contain underscores
+
+source:
+{
+  module_type: RootInput
+  saveMemoryObjectThreshold: 0
+  maxEvents: -1
+}
+
+outputs:
+{
+  out:
+  {
+    module_type:      RootOutput
+    fileName:         "%ifb_%tc_simmxd.root"
+    compressionLevel: 1
+    dataTier:         "generated"
+    SelectEvents:     [ "mixer_path" ]
+  }
+}
+
+physics:
+{
+  producers: {}
+  analyzers: {}
+  filters:
+  {
+    generator: @local::extgen_siminfomixer
+  }
+
+  mixer_path:    [ generator ]
+  trigger_paths: [ mixer_path ]
+
+  output:    [ out ]
+  end_paths: [ output ]
+}
+
+physics.filters.generator.SimInputFileNames: [ "genfile.root.local" ]

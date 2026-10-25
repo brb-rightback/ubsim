@@ -9,6 +9,11 @@
 # working directory. The step-A products are read by process name
 # (ExtGenRequests) and dropped from the output, so later stages see only the
 # merged "generator" products.
+#
+# potinevent (SubRunPOTInEvent) copies each subrun's POT into its event as
+# "potinevent:SubRunPOT", which SimInfoMixer reads (extgen_overlay_SimInfoMixer.fcl);
+# the standard chain does this in a separate job. It reads step A's POTSummary,
+# because the merged one is only written at the end of the subrun.
 
 #include "services_microboone.fcl"
 #include "extgen_modules.fcl"
@@ -33,11 +38,12 @@ physics:
 {
   producers:
   {
-    generator: @local::extgen_merge
-    rns:       { module_type: "RandomNumberSaver" }
+    generator:  @local::extgen_merge
+    potinevent: @local::microboone_subrunpotinevent
+    rns:        { module_type: "RandomNumberSaver" }
   }
   analyzers: {}
-  merge:         [ rns, generator ]
+  merge:         [ rns, generator, potinevent ]
   stream1:       [ out1 ]
   trigger_paths: [ merge ]
   end_paths:     [ stream1 ]
@@ -54,3 +60,5 @@ outputs:
     outputCommands: [ "keep *", "drop *_*_*_ExtGenRequests" ]
   }
 }
+
+physics.producers.potinevent.InputTag: "generator::ExtGenRequests"
