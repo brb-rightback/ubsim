@@ -1,0 +1,80 @@
+#
+# ExtGen production step A, BNB run 4c (and every BNB period except 4a):
+# GENIE chooses the interactions (neutrino, target, current, energy, vertex,
+# time) with GiBUU's total cross sections; GiBUU makes the final states later
+# (extgen_gibuu_grid_init.sh, which runs this job).
+#
+# Beam and geometry settings are those of standard_overlay_gen_griddriver.fcl,
+# so a GiBUU sample differs from the standard GENIE overlay only in the
+# interaction physics: default microboone_genie_simple flux set
+# (bnb_gsimple_fluxes_01.09.2019_463/converted_beammc_wincorr*.root),
+# volCryostat, the same time offsets.
+#
+# The grid script sets the spline file and the GENIE seed:
+#   physics.producers.generator.XSecTable:  "<spline file>"
+#   physics.producers.generator.RandomSeed: <seed>
+# and the number of events with lar -n. One event per subrun gives every
+# event its exact POT (plan section 8).
+
+#include "services_microboone.fcl"
+#include "genie_microboone_default+MEC.fcl"
+#include "extgen_genie_gibuu.fcl"
+
+process_name: ExtGenRequests   # read by name in extgen_merge.fcl
+
+services:
+{
+  scheduler:    { defaultExceptions: false }
+  TFileService: { fileName: "extgen_requests_hist.root" }
+  RandomNumberGenerator: {}
+  FileCatalogMetadata:  @local::art_file_catalog_mc
+  @table::microboone_gen_services
+  IFDH:         {}    # used by GENIEHelper for the flux files
+}
+
+source:
+{
+  module_type: EmptyEvent
+  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+  maxEvents:   200    # set with lar -n
+  firstRun:    1
+  firstEvent:  1
+  numberEventsInSubRun: 1
+}
+
+physics:
+{
+  producers:
+  {
+    generator: @local::microboone_genie_simple
+    rns:       { module_type: "RandomNumberSaver" }
+  }
+  simulate:      [ rns, generator ]
+  stream1:       [ out1 ]
+  trigger_paths: [ simulate ]
+  end_paths:     [ stream1 ]
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "extgen_stepA.root"
+    dataTier:    "generated"
+    compressionLevel: 1
+  }
+}
+
+# as standard_overlay_gen_griddriver.fcl
+physics.producers.generator.GlobalTimeOffset: 3125.
+physics.producers.generator.RandomTimeOffset: 1600.
+physics.producers.generator.TopVolume:        "volCryostat"
+physics.producers.generator.BeamName:         "booster"
+physics.producers.generator.FluxCopyMethod:   "DIRECT"
+
+# ExtGen GiBUU tune
+physics.producers.generator.TuneName:           @local::extgen_gibuu_tune
+physics.producers.generator.GXMLPATH:           @local::extgen_gibuu_gxmlpath
+physics.producers.generator.EventGeneratorList: @local::extgen_gibuu_eventgenlist
+physics.producers.generator.XSecTable:          "set_by_extgen_gibuu_grid_init.xml"

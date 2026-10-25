@@ -73,6 +73,7 @@ RUNS=$(( RUNS + RUNS / 10 + 2 ))
   echo "ensembles $ENS"
   echo "gibuu_commit $(awk '/^commit:/ {print $2}' "$GIBUU/BUILD_INFO")"
   echo "gibuu_md5 $(awk '/^GiBUU.x md5:/ {print $3}' "$GIBUU/BUILD_INFO")"
+  echo "card_md5 $(md5sum "$HERE/extgen_gibuu_card.sh" | awk '{print $1}')"
   echo "host $(hostname)"
   echo "start $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 } > "$OUT/extgen_scan.info"
