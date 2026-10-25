@@ -307,6 +307,12 @@ simb::MCTruth ubext::ExtGenMerge::BuildTruth(simb::MCTruth const& stepA,
   // fHitNucPDG is left as step A wrote it: GENIE2ART (nutools v2_27_11)
   // never fills it; the hit nucleon is in MCNeutrino::HitNuc().
   gtruth.fHitNucP4 = hitP4;
+  // GENIE2ART stores the probe in the hit-nucleon rest frame
+  // (InitialState::GetProbeP4() default), so step A's value refers to
+  // GENIE's nucleon; redo it for the served one (lab frame if there is none).
+  TLorentzVector probeP4 = k1;
+  if (hitP4.E() > 0.) probeP4.Boost(-hitP4.BoostVector());
+  gtruth.fProbeP4 = probeP4;
   gtruth.fHitQrkPDG = 0;
   gtruth.fIsSeaQuark = false;
   gtruth.fgQ2 = Q2;

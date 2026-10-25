@@ -14,7 +14,7 @@ of 20000 trials, ~1 h each) one job gave ~16% at 0.15 GeV, 13% at 0.3 GeV,
 Default tiers (jobs per channel), by share of the BNB interactions in
 volCryostat (Ar40 ~89%, numu ~98%):
   1: Ar40 numu CC/NC                                       --tier1 (100)
-  2: Ar40 numubar/nue/nuebar; Fe56, Cr52, Ni59 numu        --tier2 (12)
+  2: Ar40 numubar/nue/nuebar; Fe56, Cr52, Ni59 numu        --tier2 (25)
   3: every other channel of the 13 volCryostat nuclei     --tier3 (4)
   4: N14, K39, free neutron (outside volCryostat: GENIE
      needs their splines but they never interact)          --tier4 (1)
@@ -53,7 +53,7 @@ def main():
     ap.add_argument("output", help="job list file")
     ap.add_argument("--trials", type=int, default=20000, help="trials per energy per job")
     ap.add_argument("--tier1", type=int, default=100)
-    ap.add_argument("--tier2", type=int, default=12)
+    ap.add_argument("--tier2", type=int, default=25)
     ap.add_argument("--tier3", type=int, default=4)
     ap.add_argument("--tier4", type=int, default=1)
     ap.add_argument("--seed-offset", type=int, default=1000,
