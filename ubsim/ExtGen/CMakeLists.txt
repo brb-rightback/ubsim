@@ -3,6 +3,7 @@
 
 add_subdirectory(GENIE)
 add_subdirectory(Modules)
+add_subdirectory(generators)
 add_subdirectory(gxml)
 add_subdirectory(tools)
 add_subdirectory(job)
