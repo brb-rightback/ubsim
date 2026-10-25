@@ -1,0 +1,9 @@
+#
+# ExtGen production step A, BNB run 4a: extgen_requests_bnb_run4c.fcl with
+# the run-4a flux set, as standard_overlay_gen_griddriver_run4a.fcl.
+# The process name stays ExtGenRequests (read by name in extgen_merge.fcl).
+
+#include "extgen_requests_bnb_run4c.fcl"
+
+physics.producers.generator.FluxSearchPaths: "/cvmfs/uboone.osgstorage.org/stash/uboonebeam/bnb_gsimple/bnb_gsimple_fluxes_run4a_08.02.2023_463/"
+physics.producers.generator.FluxFiles:       [ "gsimple_beammc_run4a_wincorr_*.root" ]

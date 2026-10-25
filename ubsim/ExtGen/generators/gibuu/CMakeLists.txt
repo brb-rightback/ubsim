@@ -12,7 +12,7 @@ cet_make_exec( extgen_gibuu_convert
 
 cet_script( extgen_gibuu_card.sh extgen_gibuu_scan.sh extgen_gibuu_scan_grid.sh
             extgen_gibuu_serve.sh extgen_gibuu_v3.sh extgen_gibuu_xsec_check.sh
-            extgen_gibuu_grid_init.sh
+            extgen_gibuu_grid_init.sh extgen_gibuu_grid_continue.sh
             make_gibuu_tarball.sh
             extgen_gibuu_energies.txt )
 

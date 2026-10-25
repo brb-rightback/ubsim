@@ -1,0 +1,8 @@
+#
+# ExtGen production step A, NuMI RHC: extgen_requests_numi_fhc.fcl with the
+# RHC flux and POT per spill of standard_overlay_gen_numi_griddriver_rhc.fcl.
+
+#include "extgen_requests_numi_fhc.fcl"
+
+physics.producers.generator.POTPerSpill:     6e13
+physics.producers.generator.FluxSearchPaths: "/cvmfs/uboone.osgstorage.org/stash/uboonebeam/numi_dk2nu_g4_10_4_zero_threshold/RHC/"

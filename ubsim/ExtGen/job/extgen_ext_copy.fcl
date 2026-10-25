@@ -1,0 +1,23 @@
+#
+# ExtGen grid jobs with extgen_gibuu_grid_init.sh --nevents auto: first stage,
+# copies the job's EXT file into the work directory. Its <endscript>
+# extgen_gibuu_grid_continue.sh then counts the events (TrigReport) and makes
+# as many generator events; the mixer stage reads the copy.
+# (The role of copy_nonartroot.fcl with ubcore's DummySource in v10, which
+# v08 does not have.)
+#
+# The standard EXT copy job, copy_rawext.fcl (RootInput -> RootOutput, stream
+# outext), with three changes:
+#   * process name: the EXT files were made by a job named "Copy" (their
+#     history has Swizzler and Copy), and art refuses a process name that is
+#     already in a file's history;
+#   * all events (copy_rawext.fcl stops after 10);
+#   * the TrigReport summary, for the event count.
+
+#include "copy_rawext.fcl"
+
+process_name: ExtGenCopy
+
+services.scheduler.wantSummary: true
+source.maxEvents:               -1
+outputs.outext.fileName:        "%ifb_extcopy.root"

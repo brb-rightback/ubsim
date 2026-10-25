@@ -12,8 +12,19 @@
 # fcls (extgen_overlay_SimInfoMixer.fcl, g4, ...). Any failure exits non-zero,
 # which ends the job before the mixer.
 #
+# Two ways to set the number of generator events N:
+#   --nevents N      fixed: everything runs in the <initscript>. N must be at
+#                    least the EXT events of every input file (the init script
+#                    runs before the job knows its file).
+#   --nevents auto   N = the events of this job's EXT file. The <initscript>
+#                    only sets up and checks (tarball, tables, seeds) and saves
+#                    its settings in ./extgen/; the first stage copies the EXT
+#                    file (extgen_ext_copy.fcl), and its <endscript>
+#                    extgen_gibuu_grid_continue.sh runs this script with
+#                    --continue: count the copy's events, then steps A-D.
+#
 # Usage:
-#   extgen_gibuu_grid_init.sh --stepa-fcl FCL --nevents N
+#   extgen_gibuu_grid_init.sh --stepa-fcl FCL --nevents N|auto
 #       --gibuu-tarball TARBALL --gibuu-md5 MD5
 #       (--tables STEM | --spline XML [--xsec-table TXT] (--max-table TXT | --flat-max MAX))
 #       [--margin 3] [--floor 50] [--ensembles 1000] [--retries 2]
@@ -23,7 +34,7 @@
 #   FCL        step-A fcl, e.g. extgen_requests_bnb_run4c.fcl
 #   N          step-A events (= interactions, one per subrun); must be at least
 #              the number of EXT events in an input file, as EXT events left
-#              over when the generator events run out are dropped
+#              over when the generator events run out are dropped; or auto
 #   TARBALL    GiBUU tarball (make_gibuu_tarball.sh): taken from
 #              $CONDOR_DIR_INPUT if passed with jobsub -f, else copied with
 #              ifdh (/pnfs) or used in place (/cvmfs, local path)
@@ -37,6 +48,11 @@
 #   /pnfs paths are copied with ifdh.
 #   --seeds    reuse the seeds of an earlier job (from its extgen_job_summary.txt);
 #              by default each job draws its seeds from /dev/urandom
+#   extgen_gibuu_grid_init.sh --continue
+#              second half of --nevents auto (see above); N = events of the
+#              newest art file in the work directory, counted by the copy
+#              stage (TrigReport in the newest larStage*.out) and compared with
+#              its sam event_count when samweb is available
 #
 # Results in the work directory (condor_lar saves them in the job's log
 # tarball): genfile.root.local, extgen_job_summary.txt, extgen_requests.txt.gz,
@@ -116,9 +132,10 @@ lar_events() {  # number of events lar processed, from its log
 # --- options
 STEPA= NEV= TARBALL= MD5= STEM= SPLINE= XSEC= MAXTAB= FLAT=
 MARGIN=3 FLOOR=50 ENS=1000 RETRIES=2 WARN=4 FAILPULL=8
-ALLOW_MISSING=0 ALLOW_MISMATCH=0 SEEDS=
+ALLOW_MISSING=0 ALLOW_MISMATCH=0 SEEDS= CONTINUE=0
 while [ $# -gt 0 ]; do
   case $1 in
+    --continue) CONTINUE=1; shift ;;
     --stepa-fcl) STEPA=$2; shift 2 ;;
     --nevents) NEV=$2; shift 2 ;;
     --gibuu-tarball) TARBALL=$2; shift 2 ;;
@@ -141,6 +158,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+if [ "$CONTINUE" -eq 0 ]; then
 rm -rf "$WORK"
 mkdir -p "$WORK"
 {
@@ -150,7 +168,8 @@ mkdir -p "$WORK"
 } > "$SUMMARY"
 
 [ -n "$STEPA" ] || fail "--stepa-fcl missing"
-[[ "$NEV" =~ ^[0-9]+$ ]] && [ "$NEV" -gt 0 ] || fail "--nevents must be a positive integer"
+[ "$NEV" = auto ] || { [[ "$NEV" =~ ^[0-9]+$ ]] && [ "$NEV" -gt 0 ]; } \
+  || fail "--nevents must be a positive integer or auto"
 [ -n "$TARBALL" ] && [ -n "$MD5" ] || fail "--gibuu-tarball and --gibuu-md5 are required"
 if [ -n "$STEM" ]; then
   SPLINE=${SPLINE:-${STEM}_xsec.xml}
@@ -202,6 +221,9 @@ md5=$(md5sum "$TAR_F" | awk '{print $1}')
 mkdir -p "$WORK/gibuu"
 tar -xzf "$TAR_F" -C "$WORK/gibuu" || fail "cannot unpack $TAR_F"
 [ "$TAR_F" != "$WORK/$(basename "$TAR_F")" ] || rm -f "$TAR_F"
+# condor_lar.sh copies every jobsub -f file into its work directory, from
+# where it would go into the job's log tarball (64 MB per job)
+[ ! -f "$TOP/$(basename "$TAR_F")" ] || rm -f "$TOP/$(basename "$TAR_F")"
 GIBUU_COMMIT=$(awk '/^commit:/ {print $2}' "$WORK/gibuu/BUILD_INFO")
 GIBUU_MD5=$(awk '/^GiBUU.x md5:/ {print $3}' "$WORK/gibuu/BUILD_INFO")
 note "gibuu_tarball $TARBALL md5 $md5 commit $GIBUU_COMMIT binary_md5 $GIBUU_MD5"
@@ -229,6 +251,41 @@ for t in ${MAX_F:-} $XSEC_F; do
     note "warning: $t from another job card (--allow-build-mismatch)"
   fi
 done
+
+if [ "$NEV" = auto ]; then
+  # the rest runs from the copy stage's <endscript> (--continue)
+  declare -p STEPA SPLINE_F XSEC_F MAXOPT ENS RETRIES WARN FAILPULL ALLOW_MISSING \
+             SEED_GENIE SEED_MERGE SEED_GIBUU > "$WORK/job.env"
+  note "nevents auto (counted after the EXT copy stage)"
+  log "setup done; steps A-D follow the EXT copy stage ($(date -u))"
+  exit 0
+fi
+
+else  # --continue
+  [ -f "$WORK/job.env" ] || fail "--continue without a setup (no $WORK/job.env)"
+  . "$WORK/job.env"
+  log "continuing after the EXT copy stage ($(date -u))"
+  EXT=$(ls -t1 *.root 2>/dev/null | egrep -v 'celltree|hist|larlite|larcv|Supplemental|TGraphs' | head -n1)
+  [ -n "$EXT" ] || fail "no EXT copy (*.root) in $TOP"
+  stagelog=$(ls -t1 larStage*.out 2>/dev/null | head -n1)
+  [ -n "$stagelog" ] || fail "no larStage*.out of the copy stage"
+  NEV=$(lar_events "$stagelog")
+  [ "$NEV" -gt 0 ] || fail "copy stage $stagelog processed no events"
+  note "nevents $NEV (copy stage $stagelog, file $EXT)"
+  # cross-check with sam (the copy has a new name; the consumed file has the original)
+  if command -v samweb > /dev/null && [ -s consumed_files.list ]; then
+    for f in $(cat consumed_files.list); do
+      sc=$(samweb get-metadata "$f" 2> /dev/null | awk '/^ *Event Count:/ {print $3}')
+      if [ -z "$sc" ]; then
+        note "sam_event_count $f unknown"
+      elif [ "$sc" -ne "$NEV" ]; then
+        note "warning: sam event_count $sc for $f, the copy has $NEV (using $NEV)"
+      else
+        note "sam_event_count $f $sc (agrees)"
+      fi
+    done
+  fi
+fi
 
 cd "$WORK" || fail "no $WORK"
 

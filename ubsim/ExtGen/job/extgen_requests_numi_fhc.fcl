@@ -1,0 +1,28 @@
+#
+# ExtGen production step A, NuMI FHC: extgen_requests_bnb_run4c.fcl with the
+# generator settings of standard_overlay_gen_numi_griddriver_fhc.fcl (dk2nu
+# flux, microboone-numi-v2 location, NuMI spill timing and POT per spill).
+# The GiBUU cross sections end at the 8 GeV cap (plan section 7): neutrinos
+# above it never interact, so the sample covers E < 8 GeV with correct POT.
+# The process name stays ExtGenRequests (read by name in extgen_merge.fcl).
+
+#include "extgen_requests_bnb_run4c.fcl"
+
+physics.producers.generator:                  @local::standard_genie
+physics.producers.generator.POTPerSpill:      5e13
+physics.producers.generator.EventsPerSpill:   0
+physics.producers.generator.GlobalTimeOffset: 5627.5
+physics.producers.generator.RandomTimeOffset: 9600.
+physics.producers.generator.TopVolume:        "volCryostat"
+physics.producers.generator.BeamName:         "numi"
+physics.producers.generator.FluxType:         "dk2nu"
+physics.producers.generator.FluxSearchPaths:  "/cvmfs/uboone.osgstorage.org/stash/uboonebeam/numi_dk2nu_g4_10_4_zero_threshold/FHC/"
+physics.producers.generator.FluxFiles:        [ "g4numi_*.root" ]
+physics.producers.generator.DetectorLocation: "microboone-numi-v2"
+physics.producers.generator.FluxCopyMethod:   "DIRECT"
+
+# ExtGen GiBUU tune (the generator table was replaced above)
+physics.producers.generator.TuneName:           @local::extgen_gibuu_tune
+physics.producers.generator.GXMLPATH:           @local::extgen_gibuu_gxmlpath
+physics.producers.generator.EventGeneratorList: @local::extgen_gibuu_eventgenlist
+physics.producers.generator.XSecTable:          "set_by_extgen_gibuu_grid_init.xml"
