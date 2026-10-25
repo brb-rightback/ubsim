@@ -1,0 +1,56 @@
+#
+# ExtGen step D: merge the external generator's served events into the
+# step-A interactions (ExtGenMerge), writing the same products as GENIEGen
+# under the label "generator".
+#
+#   lar -c extgen_merge.fcl -s stepA.root
+#
+# Inputs: requests.txt (step B) and served_events.txt (step C) in the
+# working directory. The step-A products are read by process name
+# (ExtGenRequests) and dropped from the output, so later stages see only the
+# merged "generator" products.
+
+#include "services_microboone.fcl"
+#include "extgen_modules.fcl"
+
+process_name: ExtGenMerge
+
+services:
+{
+  scheduler:             { defaultExceptions: false }
+  RandomNumberGenerator: {}
+  FileCatalogMetadata:   @local::art_file_catalog_mc
+  @table::microboone_gen_services
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1
+}
+
+physics:
+{
+  producers:
+  {
+    generator: @local::extgen_merge
+    rns:       { module_type: "RandomNumberSaver" }
+  }
+  analyzers: {}
+  merge:         [ rns, generator ]
+  stream1:       [ out1 ]
+  trigger_paths: [ merge ]
+  end_paths:     [ stream1 ]
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type:    RootOutput
+    fileName:       "%ifb_merged.root"
+    dataTier:       "generated"
+    compressionLevel: 1
+    outputCommands: [ "keep *", "drop *_*_*_ExtGenRequests" ]
+  }
+}

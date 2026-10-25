@@ -1,0 +1,69 @@
+#
+# GENIE closure test (V2), step A: standard GENIEGen with the default
+# MicroBooNE GENIE tune (full events), with exactly the beam, geometry and
+# subrun settings of an ExtGen step-A job (BNB run 4c, volCryostat, one event
+# per subrun). The process name is the production one, so the production
+# dump and merge fcls run unchanged on its output:
+#
+#   lar -c extgen_closure_stepA_bnb.fcl -n 200              # -> extgen_closure_stepA.root
+#   lar -c extgen_closure_serve.fcl -s extgen_closure_stepA.root   # -> requests.txt, served_events.txt
+#   lar -c extgen_closure_merge.fcl -s extgen_closure_stepA.root   # merge + ExtGenClosureCheck
+
+#include "services_microboone.fcl"
+#include "genie_microboone_default+MEC.fcl"
+
+process_name: ExtGenRequests
+
+services:
+{
+  scheduler:     { defaultExceptions: false }
+  TFileService:  { fileName: "extgen_closure_stepA_hist.root" }
+  TimeTracker:   {}
+  MemoryTracker: {}
+  RandomNumberGenerator: {}
+  FileCatalogMetadata:  @local::art_file_catalog_mc
+  @table::microboone_gen_services
+  IFDH:          {}    # used by GENIEHelper for the flux files
+}
+
+source:
+{
+  module_type: EmptyEvent
+  timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+  maxEvents:   200
+  firstRun:    1
+  firstEvent:  1
+  numberEventsInSubRun: 1    # exact POT per event (plan section 8)
+}
+
+physics:
+{
+  producers:
+  {
+    generator: @local::microboone_genie_simple
+    rns:       { module_type: "RandomNumberSaver" }
+  }
+  simulate:      [ rns, generator ]
+  stream1:       [ out1 ]
+  trigger_paths: [ simulate ]
+  end_paths:     [ stream1 ]
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "extgen_closure_stepA.root"
+    dataTier:    "generated"
+    compressionLevel: 1
+  }
+}
+
+# Same beam/geometry settings as standard_overlay_gen_griddriver.fcl (run 4c)
+# and extgen_requests_test_bnb.fcl
+physics.producers.generator.GlobalTimeOffset: 3125.
+physics.producers.generator.RandomTimeOffset: 1600.
+physics.producers.generator.TopVolume:        "volCryostat"
+physics.producers.generator.BeamName:         "booster"
+physics.producers.generator.FluxCopyMethod:   "DIRECT"

@@ -1,0 +1,25 @@
+#
+# Module configurations of the ExtGen chain (generator-neutral).
+
+BEGIN_PROLOG
+
+# Step B: request file from the step-A MCTruths
+extgen_request_dumper:
+{
+  module_type: ExtGenRequestDumper
+  InputTruth:  "generator::ExtGenRequests"
+  OutputFile:  "requests.txt"
+}
+
+# Step D: merge the served events into the step-A interactions
+extgen_merge:
+{
+  module_type:      ExtGenMerge
+  InputTruth:       "generator::ExtGenRequests"   # step-A products, by process name
+  RequestFile:      "requests.txt"
+  ServedFile:       "served_events.txt"
+  RandomAzimuth:    true    # extra random rotation about the neutrino direction
+  RequireAllServed: true    # every served event must be used
+}
+
+END_PROLOG

@@ -1,0 +1,29 @@
+#
+# GENIE closure test (V2), step D: the production merge job
+# (extgen_merge.fcl) plus ExtGenClosureCheck, which compares every merged
+# interaction with GENIE's original and fails the job on any difference.
+#
+#   lar -c extgen_closure_merge.fcl -s extgen_closure_stepA.root
+#
+# RandomAzimuth is off, so momenta must agree component by component. To
+# test the random azimuth too, add both lines with "true":
+#   physics.producers.generator.RandomAzimuth: true
+#   physics.analyzers.closurecheck.RandomAzimuth: true
+
+#include "extgen_merge.fcl"
+
+process_name: ExtGenMerge
+
+physics.producers.generator.RandomAzimuth: false
+
+physics.analyzers.closurecheck:
+{
+  module_type:   ExtGenClosureCheck
+  OriginalTruth: "generator::ExtGenRequests"
+  MergedTruth:   "generator::ExtGenMerge"
+  RandomAzimuth: false
+}
+physics.check:     [ closurecheck ]
+physics.end_paths: [ stream1, check ]
+
+outputs.out1.fileName: "extgen_closure_merged.root"

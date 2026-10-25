@@ -35,6 +35,7 @@ source:
   maxEvents:   20
   firstRun:    1
   firstEvent:  1
+  numberEventsInSubRun: 1    # exact POT per event (plan section 8)
 }
 
 physics:

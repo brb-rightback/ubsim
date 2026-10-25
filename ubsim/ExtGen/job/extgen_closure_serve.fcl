@@ -1,0 +1,39 @@
+#
+# GENIE closure test (V2), steps B and C: writes the requests of the
+# closure step A (ExtGenRequestDumper, as in production) and lets GENIE's
+# own final states play the external generator (ExtGenTruthServer). Both
+# modules run in the same job on the same input, so req_ids agree.
+#
+#   lar -c extgen_closure_serve.fcl -s extgen_closure_stepA.root
+
+#include "messageservice.fcl"
+#include "extgen_modules.fcl"
+
+process_name: ExtGenClosureServe
+
+services:
+{
+  message: @local::standard_info
+}
+
+source:
+{
+  module_type: RootInput
+  maxEvents:   -1
+}
+
+physics:
+{
+  analyzers:
+  {
+    dumprequests: @local::extgen_request_dumper
+    serve:
+    {
+      module_type: ExtGenTruthServer
+      InputTruth:  "generator::ExtGenRequests"
+      OutputFile:  "served_events.txt"
+    }
+  }
+  dump:      [ dumprequests, serve ]
+  end_paths: [ dump ]
+}

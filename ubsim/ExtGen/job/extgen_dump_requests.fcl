@@ -7,6 +7,7 @@
 # For a human-readable dump of the same events use larsim's dump_mctruth.fcl.
 
 #include "messageservice.fcl"
+#include "extgen_modules.fcl"
 
 process_name: ExtGenDumpRequests
 
@@ -25,12 +26,7 @@ physics:
 {
   analyzers:
   {
-    dumprequests:
-    {
-      module_type: ExtGenRequestDumper
-      InputTruth:  "generator"
-      OutputFile:  "requests.txt"
-    }
+    dumprequests: @local::extgen_request_dumper
   }
   dump:      [ dumprequests ]
   end_paths: [ dump ]

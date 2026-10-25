@@ -26,9 +26,9 @@ area.
 |---|---|
 | `GENIE/` | GENIE plugin library `ubsim_ExtGen_GENIE`: `genie::ubext::ExtGenPXSec` (total cross sections) and `genie::ubext::ExtGenInteractionListGenerator` (one CC and one NC interaction per initial state). GENIE finds them through their ROOT dictionary. |
 | `gxml/` | GENIE configuration, installed to `$UBSIM_DIR/gxml`: the `GB25_05a_00_000` tune (all tune files in `GB25_05a/`: a `_00_000` tune is "configuration only" to GENIE, which never reads a `GB25_05a_00_000/` subdirectory) plus overriding copies of GENIE's `master_config.xml` and `EventGenerator.xml`. **This directory must only be on `GXMLPATH` for ExtGen jobs, never on `FW_SEARCH_PATH`.** Regenerate the copies with `gxml/make_extgen_gxml.sh` when the GENIE version changes. |
-| `Modules/` | art modules: `ExtGenRequestDumper` (step B; writes `requests.txt`, checking each `MCTruth` against its `GTruth`). |
+| `Modules/` | art modules: `ExtGenRequestDumper` (step B; writes `requests.txt`, checking each `MCTruth` against its `GTruth`), `ExtGenMerge` (step D), and for the GENIE closure test `ExtGenTruthServer` and `ExtGenClosureCheck`. Library `ubsim_ExtGen_Modules` (`ExtGenIO`): request and served-event file formats and the generator-to-detector rotation. |
 | `tools/` | Offline scripts: `extgen_make_splines.py` (cross section table to GENIE spline XML), `extgen_placeholder_xsec.py` (fake cross sections for tests) and `extgen_request_summary.py` (checks a request file and summarises targets, flavours, energies and vertices). |
-| `job/` | fcl files. |
+| `job/` | fcl files: `extgen_modules.fcl` (module prologs), `extgen_requests_test_bnb.fcl` (step A test), `extgen_dump_requests.fcl` (step B), `extgen_merge.fcl` (step D), `extgen_closure_*.fcl` (GENIE closure test). |
 | `generators/gibuu/` | `build_gibuu.sh`: builds GiBUU for grid jobs from a commit of the MicroBooNE GiBUU repository (official release on `main`, MicroBooNE patches on `v08_00_00_br`). Run by hand in SL7; not part of the mrb build. |
 
 Cross section splines for production live in uboonedata, under `genie/gibuu/`.
@@ -59,3 +59,19 @@ extgen_request_summary.py requests.txt
 For a human-readable dump of the same events, larsim's `dump_mctruth.fcl`
 (DumpMCTruth and DumpGTruth) works unchanged:
 `lar -c dump_mctruth.fcl -s extgen_requests_test.root` (writes `DumpMCTruth.log`).
+
+## GENIE closure test (V2, merge step)
+
+GENIE plays the external generator: step A runs with the standard MicroBooNE
+GENIE tune (full events), `ExtGenTruthServer` writes GENIE's own final states
+as a served-event file, and the production merge job rebuilds every
+interaction from the request and served files. `ExtGenClosureCheck` then
+compares each merged interaction with GENIE's original (particles, momenta,
+vertex and time, MCNeutrino codes and kinematics, GTruth, MCFlux,
+BeamGateInfo, POT per subrun) and fails the job on any difference.
+
+```
+lar -c extgen_closure_stepA_bnb.fcl -n 200
+lar -c extgen_closure_serve.fcl -s extgen_closure_stepA.root
+lar -c extgen_closure_merge.fcl -s extgen_closure_stepA.root
+```
