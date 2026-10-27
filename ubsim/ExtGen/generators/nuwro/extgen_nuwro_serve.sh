@@ -73,7 +73,7 @@ SUMMARY=$OUT/serve_summary.txt
   echo "requests $REQ"
   echo "nuwro_commit $(awk '/^commit:/ {print $2}' "$NUWRO/BUILD_INFO")"
   echo "nuwro_md5 $(awk '/^nuwro_extgen md5:/ {print $3}' "$NUWRO/BUILD_INFO")"
-  echo "nuwro_products $(awk -F': *' '/^ups products:/ {print $2}' "$NUWRO/BUILD_INFO")"
+  echo "nuwro_products $(awk '/^ups products:/ {sub(/^ups products: */, ""); print}' "$NUWRO/BUILD_INFO")"
   if [ -n "$MAXTAB" ]; then
     echo "max_table $(realpath "$MAXTAB") margin $MARGIN floor $FLOOR"
   else

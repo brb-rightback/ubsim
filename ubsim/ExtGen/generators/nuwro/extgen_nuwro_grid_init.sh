@@ -242,7 +242,7 @@ tar -xzf "$TAR_F" -C "$WORK/nuwro" || fail "cannot unpack $TAR_F"
 NUWRO_COMMIT=$(awk '/^commit:/ {print $2}' "$WORK/nuwro/BUILD_INFO")
 NUWRO_MD5=$(awk '/^nuwro_extgen md5:/ {print $3}' "$WORK/nuwro/BUILD_INFO")
 note "nuwro_tarball $TARBALL md5 $md5 commit $NUWRO_COMMIT binary_md5 $NUWRO_MD5"
-note "nuwro_products $(awk -F': *' '/^ups products:/ {print $2}' "$WORK/nuwro/BUILD_INFO")"
+note "nuwro_products $(awk '/^ups products:/ {sub(/^ups products: */, ""); print}' "$WORK/nuwro/BUILD_INFO")"
 [[ "$NUWRO_MD5" =~ ^[0-9a-f]{32}$ ]] || fail "no nuwro_extgen md5 in the tarball's BUILD_INFO"
 [ "$(md5sum "$WORK/nuwro/bin/nuwro_extgen" | cut -c1-32)" = "$NUWRO_MD5" ] \
   || fail "bin/nuwro_extgen does not match the tarball's BUILD_INFO"
