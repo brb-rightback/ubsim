@@ -162,8 +162,8 @@ Build, tables and production:
    --nuwro-tarball ... --nuwro-md5 ... --tables genie/nuwro/<STEM>
    --soft-fail` and `<endscript>extgen_nuwro_grid_continue.sh</endscript>`.
    The job files are those of the GiBUU route (`extgen_job_summary.txt`,
-   `extgen_xsec_check.txt`, ...); NuWro runs about 10–20 s per group plus
-   ~12 ms per event.
+   `extgen_xsec_check.txt`, ...); NuWro starts in ~70 s per group
+   (`spp_precision = 2000`) plus ~12 ms per event.
 
 Validation V3 (request mode against stock NuWro, same card, one fixed
 energy): `extgen_nuwro_v3.sh -d <unpacked tarball> -t TARGET -n NU -c CC|NC

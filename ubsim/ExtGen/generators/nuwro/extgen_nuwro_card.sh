@@ -26,6 +26,11 @@
 #   * channels: all of the group's current (CC: QEL, RES, DIS, COH, MEC, HYP;
 #     NC: QEL, RES, DIS, COH, MEC); neutrino-electron scattering off. HYP is
 #     on for neutrinos too (zero cross section: never generated);
+#   * spp_precision = 2000 (card: 500): the number of sampled points per bin
+#     of NuWro's RES-DIS boundary tables, built at start-up; nuwro_extgen
+#     builds them with one fixed seed in every process, so their noise is a
+#     fixed offset of the RES cross sections, ~4.5% on Ar40 numu NC RES at
+#     500, ~2% at 2000, for ~50 s more start-up per group (67 s instead of 19);
 #   * no NuWro test or real events (nuwro_extgen makes the events).
 # random_seed is set on nuwro_extgen's command line (-p random_seed=N).
 
@@ -150,7 +155,7 @@ delta_FF_set           = 1
 pion_axial_mass        = 0.94
 pion_C5A               = 1.19
 delta_angular          = 2
-spp_precision          = 500
+spp_precision          = 2000   // card: 500; see the header
 bkgrscaling            = 0.0
 res_dis_cut            = 1900
 res_dis_blending_start = 1600
