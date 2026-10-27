@@ -6,20 +6,24 @@ Each job scans every energy of extgen_nuwro_energies.txt with `trials`
 trials per channel (extgen_nuwro_scan_grid.sh picks its line by $PROCESS).
 Statistics of all jobs of a channel are added by extgen_nuwro_tables.py.
 
-NuWro trials are cheap (~55 us each without FSI on Ar40, i.e. ~35 min per
-job of 62 energies x 6 channels x 100000 trials) and its weights are much
-less skewed than GiBUU's (largest/mean weight ~5-30 per channel), so far
-fewer trials than for GiBUU give the same precision: in a local test (Ar40
-numu CC, 1 GeV) 40000 trials gave 0.6% on QEL and 0.9% on RES, i.e.
-~0.15-0.2% with the 800000 of the default tier 1.
+NuWro trials are cheap (~30-55 us each without FSI on Ar40, i.e. ~20-40
+min per job of 62 energies x 6 channels x 100000 trials) and its weights are
+much less skewed than GiBUU's (largest/mean weight ~5-50 per channel). But
+NuWro's RES cross sections scatter from run to run 2-9 times more than their
+variance suggests (stock NuWro too): Ar40 numu NC RES at 1 GeV scatters by
+~3-4% between runs of 200000 trials. The default tiers are sized for that:
+tier 1 gives 3.2M trials per point and channel (~1% on NC RES, ~0.5% on the
+NC total, better for CC); extgen_nuwro_tables.py takes the errors from the
+spread of the jobs.
 
 Default tiers (jobs per channel), as for GiBUU (extgen_gibuu_scan_jobs.py),
 by share of the BNB interactions in volCryostat (Ar40 ~89%, numu ~98%):
-  1: Ar40 numu CC/NC                                       --tier1 (8)
-  2: Ar40 numubar/nue/nuebar; Fe56, Cr52, Ni59 numu        --tier2 (4)
-  3: every other channel of the 13 volCryostat nuclei     --tier3 (2)
+  1: Ar40 numu CC/NC                                       --tier1 (32)
+  2: Ar40 numubar/nue/nuebar; Fe56, Cr52, Ni59 numu        --tier2 (8)
+  3: every other channel of the 13 volCryostat nuclei     --tier3 (4)
   4: N14, K39, free neutron (outside volCryostat: GENIE
-     needs their splines but they never interact)          --tier4 (1)
+     needs their splines but they never interact)          --tier4 (2)
+(568 jobs, ~300 CPU-hours.)
 Seeds are seed_offset + job_index (NuWro needs seeds > 1), unique within
 the campaign; a retried job reuses its seed and reproduces its result.
 
@@ -55,10 +59,10 @@ def main():
     ap.add_argument("output", help="job list file")
     ap.add_argument("--trials", type=int, default=100000,
                     help="trials per energy and channel per job")
-    ap.add_argument("--tier1", type=int, default=8)
-    ap.add_argument("--tier2", type=int, default=4)
-    ap.add_argument("--tier3", type=int, default=2)
-    ap.add_argument("--tier4", type=int, default=1)
+    ap.add_argument("--tier1", type=int, default=32)
+    ap.add_argument("--tier2", type=int, default=8)
+    ap.add_argument("--tier3", type=int, default=4)
+    ap.add_argument("--tier4", type=int, default=2)
     ap.add_argument("--seed-offset", type=int, default=2000,
                     help="seed of job 0 (use a new offset for an extension campaign)")
     ap.add_argument("--only", default=None,

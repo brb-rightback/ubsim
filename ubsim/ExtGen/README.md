@@ -165,6 +165,14 @@ Build, tables and production:
    `extgen_xsec_check.txt`, ...); NuWro runs about 10–20 s per group plus
    ~12 ms per event.
 
+Validation V3 (request mode against stock NuWro, same card, one fixed
+energy): `extgen_nuwro_v3.sh -d <unpacked tarball> -t TARGET -n NU -c CC|NC
+-E E_GeV -N 20000 -s SEED -o OUT`. Stock NuWro runs inside `nuwro_extgen -m
+stock` (NuWro's own `test_events` and `real_events`, as stock `NuWro::main`);
+both samples are compared by `extgen_served_compare.py` (any two served-event
+files: cross section, process, struck nucleon, multiplicities, lepton
+kinematics, Q², leading proton, hadronic energy; the tests of GiBUU's V3).
+
 ## Production (grid)
 
 One grid job per EXT file. `xml/extgen_gibuu_bnb_run4c_reco1.xml` and

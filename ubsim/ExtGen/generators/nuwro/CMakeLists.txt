@@ -6,7 +6,7 @@
 # are installed together.
 cet_script( extgen_nuwro_card.sh extgen_nuwro_run.sh extgen_nuwro_scan.sh
             extgen_nuwro_scan_grid.sh extgen_nuwro_serve.sh
-            extgen_nuwro_grid_init.sh extgen_nuwro_grid_continue.sh
+            extgen_nuwro_grid_init.sh extgen_nuwro_grid_continue.sh extgen_nuwro_v3.sh
             build_nuwro.sh make_nuwro_tarball.sh
             extgen_nuwro_energies.txt )
 

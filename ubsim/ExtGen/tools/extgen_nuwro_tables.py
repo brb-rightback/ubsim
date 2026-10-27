@@ -10,8 +10,12 @@ energy, NuWro channel) over all scans, and writes:
                   nu_pdg CC|NC target_pdg E_GeV sigma   # rel_err n_trials
                 sigma = A * sum over the channels of the mean weight
                 [1e-38 cm^2 per nucleus]; rel_err from the channels'
-                statistical errors added in quadrature; n_trials the
-                smallest number of trials of a channel.
+                errors added in quadrature, each the larger of the
+                variance-based error and, with 3 or more scans of the
+                channel, the error from the spread of the scans' means
+                (NuWro's RES weights scatter from run to run 2-9 times more
+                than their variance suggests, in stock NuWro too); n_trials
+                the smallest number of trials of a channel.
   --max FILE    largest weight seen per point and channel (per nucleon, the
                 scale of nuwro_extgen's Max values):
                   nu_pdg CC|NC target_pdg E_GeV dyn max_w n_trials
@@ -89,6 +93,8 @@ def main():
 
     # (nu, cur, tgt, E, dyn) -> [n, sum_w, sum_w2, max_w, n_nan]
     acc = collections.defaultdict(lambda: [0, 0.0, 0.0, 0.0, 0])
+    # (nu, cur, tgt, E, dyn) -> [(n, mean) of each scan]
+    per_scan = collections.defaultdict(list)
     channel_sets = {}
     nucleons = {}
     builds = set()
@@ -118,6 +124,7 @@ def main():
             a[2] += sw2
             a[3] = max(a[3], mw)
             a[4] += nnan
+            per_scan[(nu, cur, tgt, E, dyn)].append((n, sw / n))
     if len(builds) > 1 and not args.allow_mixed_builds:
         fail("scans from %d different NuWro builds: %s" % (len(builds), sorted(builds)))
     if len(cards) > 1:
@@ -129,7 +136,20 @@ def main():
     for (nu, cur, tgt, E, dyn), a in acc.items():
         points[(nu, cur, tgt, E)].append((dyn, a))
 
+    def spread_var(key):
+        """Variance of the combined mean from the spread of the scans' means
+        (weighted by trials), or 0 with fewer than 3 scans."""
+        runs = per_scan[key]
+        if len(runs) < 3:
+            return 0.0
+        ntot = float(sum(n for n, _ in runs))
+        m = sum(n * x for n, x in runs) / ntot
+        # variance of one trial-weighted scan mean, scaled to the total
+        v = sum(n * (x - m) ** 2 for n, x in runs) / (len(runs) - 1)
+        return v / ntot
+
     worst = []
+    spread_larger = 0
     nan_total = 0
     nan_by = {}
     channels = collections.defaultdict(list)
@@ -155,7 +175,11 @@ def main():
                 m = sw / n
                 v = max(0.0, sw2 / n - m * m)
                 mean += m
-                var += v / (n - 1) if n > 1 else float("inf")
+                vstat = v / (n - 1) if n > 1 else float("inf")
+                vspread = spread_var(key + (dyn,))
+                if vspread > vstat:
+                    spread_larger += 1
+                var += max(vstat, vspread)
                 nmin = n if nmin is None else min(nmin, n)
                 nan_total += nnan
                 fm.write("%d %s %d %.6g %d %.8g %d\n" % (nu, cur, tgt, E, dyn, mw, n))
@@ -184,6 +208,8 @@ def main():
         for k in sorted(nan_by):
             print("  %d %s %d dyn %d: %d NaN per %d valid trials (%.2g%%)"
                   % (k + (nan_by[k][0], nan_by[k][1], 100.0 * nan_by[k][0] / nan_by[k][1])))
+    print("errors from the scans' spread (larger than the variance-based ones) at %d channel points"
+          % spread_larger)
     print("card md5 %s; wrote %s and %s" % (card, args.xsec, args.maxfile))
     if worst:
         worst.sort(reverse=True)
