@@ -1,0 +1,14 @@
+#
+# ExtGen production step A with NuWro: extgen_requests_bnb_run4c.fcl (flux,
+# geometry, spill timing and POT as for GiBUU) with the NuWro tune
+# NW25_11a_00_000, i.e. NuWro's total cross sections (splines set by
+# extgen_nuwro_grid_init.sh). The process name stays ExtGenRequests (read by
+# name in extgen_merge.fcl).
+
+#include "extgen_genie_nuwro.fcl"   // prolog: before any body statement
+#include "extgen_requests_bnb_run4c.fcl"
+
+physics.producers.generator.TuneName:           @local::extgen_nuwro_tune
+physics.producers.generator.GXMLPATH:           @local::extgen_nuwro_gxmlpath
+physics.producers.generator.EventGeneratorList: @local::extgen_nuwro_eventgenlist
+physics.producers.generator.XSecTable:          "set_by_extgen_nuwro_grid_init.xml"

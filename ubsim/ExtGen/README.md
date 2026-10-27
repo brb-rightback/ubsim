@@ -1,6 +1,6 @@
 # ExtGen: external neutrino generators through GENIE's flux and geometry drivers
 
-ExtGen runs neutrino interactions from an external generator (GiBUU first)
+ExtGen runs neutrino interactions from an external generator (GiBUU; NuWro)
 with exactly the flux, geometry, vertex distribution and POT accounting of a
 standard MicroBooNE GENIE overlay:
 
@@ -25,14 +25,15 @@ area.
 | Directory | What it holds |
 |---|---|
 | `GENIE/` | GENIE plugin library `ubsim_ExtGen_GENIE`: `genie::ubext::ExtGenPXSec` (total cross sections) and `genie::ubext::ExtGenInteractionListGenerator` (one CC and one NC interaction per initial state). GENIE finds them through their ROOT dictionary. |
-| `gxml/` | GENIE configuration, installed to `$UBSIM_DIR/gxml`: the `GB25_05a_00_000` tune (all tune files in `GB25_05a/`: a `_00_000` tune is "configuration only" to GENIE, which never reads a `GB25_05a_00_000/` subdirectory) plus overriding copies of GENIE's `master_config.xml` and `EventGenerator.xml`. **This directory must only be on `GXMLPATH` for ExtGen jobs, never on `FW_SEARCH_PATH`.** Regenerate the copies with `gxml/make_extgen_gxml.sh` when the GENIE version changes. |
+| `gxml/` | GENIE configuration, installed to `$UBSIM_DIR/gxml`: the tunes `GB25_05a_00_000` (GiBUU) and `NW25_11a_00_000` (NuWro), identical apart from their name, which ties a spline file to one generator (all tune files in `GB25_05a/` and `NW25_11a/`: a `_00_000` tune is "configuration only" to GENIE, which never reads a `GB25_05a_00_000/` subdirectory) plus overriding copies of GENIE's `master_config.xml` and `EventGenerator.xml`. **This directory must only be on `GXMLPATH` for ExtGen jobs, never on `FW_SEARCH_PATH`.** Regenerate the copies with `gxml/make_extgen_gxml.sh` when the GENIE version changes. |
 | `Modules/` | art modules: `ExtGenRequestDumper` (step B; writes `requests.txt`, checking each `MCTruth` against its `GTruth`), `ExtGenMerge` (step D), and for the GENIE closure test `ExtGenTruthServer`, `ExtGenClosureCheck` and `ExtGenMixCheck`. Library `ubsim_ExtGen_Modules` (`ExtGenIO`): request and served-event file formats and the generator-to-detector rotation. |
-| `tools/` | Offline scripts: `extgen_make_splines.py` (cross section table to GENIE spline XML), `extgen_placeholder_xsec.py` (fake cross sections for tests), `extgen_request_summary.py` (checks a request file and summarises targets, flavours, energies and vertices), `extgen_gibuu_scan_jobs.py` (job list of the GiBUU scan campaign), `extgen_gibuu_tables.py` (merges scans into the cross-section and Max tables), `extgen_gibuu_v3_compare.py` (V3), `extgen_gibuu_v4_summary.py` (V4 over a production) and `extgen_v5_compare.py` (V5, truth-level sample comparison after reco2). |
-| `job/` | fcl files: `extgen_modules.fcl` (module prologs), `extgen_requests_test_bnb.fcl` (step A test), `extgen_dump_requests.fcl` (step B), `extgen_merge.fcl` (step D, also writes the per-event POT `potinevent:SubRunPOT`), `extgen_overlay_SimInfoMixer.fcl` (overlay on EXT, exact POT per mixed event), `extgen_closure_*.fcl` (GENIE closure test). |
+| `tools/` | Offline scripts: `extgen_make_splines.py` (cross section table to GENIE spline XML), `extgen_placeholder_xsec.py` (fake cross sections for tests), `extgen_request_summary.py` (checks a request file and summarises targets, flavours, energies and vertices), `extgen_gibuu_scan_jobs.py` (job list of the GiBUU scan campaign), `extgen_gibuu_tables.py` (merges scans into the cross-section and Max tables), `extgen_gibuu_v3_compare.py` (V3), `extgen_gibuu_v4_summary.py` (V4 over a production; reads NuWro jobs' reports too) and `extgen_v5_compare.py` (V5, truth-level sample comparison after reco2); for NuWro `extgen_nuwro_scan_jobs.py` and `extgen_nuwro_tables.py`. |
+| `job/` | fcl files: `extgen_modules.fcl` (module prologs), `extgen_requests_test_bnb.fcl` (step A test), `extgen_dump_requests.fcl` (step B), `extgen_merge.fcl` (step D, also writes the per-event POT `potinevent:SubRunPOT`), `extgen_overlay_SimInfoMixer.fcl` (overlay on EXT, exact POT per mixed event), `extgen_closure_*.fcl` (GENIE closure test); step A of production: `extgen_requests_{bnb_run4c,bnb_run4a,numi_fhc,numi_rhc}.fcl` (GiBUU tune) and `extgen_requests_nuwro_*.fcl` (the same with the NuWro tune, `extgen_genie_nuwro.fcl`). |
 | `generators/gibuu/` | `build_gibuu.sh`: builds GiBUU for grid jobs from a commit of the MicroBooNE GiBUU repository (official release on `main`, MicroBooNE patches such as request mode on `v08_00_00_br`); run by hand in SL7. `extgen_gibuu_card.sh`: the GiBUU card of every ExtGen GiBUU run (one set of physics settings). `extgen_gibuu_scan.sh`: one scan (request mode 2) for the tables; `extgen_gibuu_energies.txt`: its energy grid. `make_gibuu_tarball.sh` and `extgen_gibuu_scan_grid.sh`: the grid scan campaign. `extgen_gibuu_convert`: GiBUU request-mode output to `served_events.txt` and `trial_stats.txt` (step C). `extgen_gibuu_serve.sh`: step C for one job's requests. `extgen_gibuu_xsec_check.sh`: in-job cross-section check (V4). `extgen_gibuu_grid_init.sh`: the project.py `<initscript>` of production jobs (steps A–D, leaving `genfile.root.local` for `extgen_overlay_SimInfoMixer.fcl`). |
+| `generators/nuwro/` | NuWro route (NuWro branch `v08_00_00_br`, program `nuwro_extgen`): `build_nuwro.sh` (SL7, e26 ROOT/Pythia6), `make_nuwro_tarball.sh`, `extgen_nuwro_run.sh` (runs NuWro in a clean e26 environment), `extgen_nuwro_card.sh`, `extgen_nuwro_scan.sh` + `extgen_nuwro_scan_grid.sh` + `extgen_nuwro_energies.txt` (scan campaign), `extgen_nuwro_serve.sh` (step C), `extgen_nuwro_grid_init.sh` + `extgen_nuwro_grid_continue.sh` (production jobs). See "NuWro route" below. |
 | `xml/` | Example project.py XML (`extgen_gibuu_bnb_run4c_test.xml`: 10-job grid test). |
 
-Cross section splines for production live in uboonedata, under `genie/gibuu/`.
+Cross section splines for production live in uboonedata, under `genie/gibuu/` (and `genie/nuwro/`).
 
 ## Phase-1 test (GENIE side only)
 
@@ -113,6 +114,56 @@ uses for its rejection.
 Target densities: `densitySwitch_Static=2` (as in the 2026 production card)
 for C12, O16, Al27, Ar40, Ca40, Fe56, which GiBUU has NPA 554 densities for;
 3 (GiBUU's default) for all other nuclei.
+
+## NuWro route
+
+The same chain with NuWro (25.11.1 plus request mode: NuWro repository,
+branch `v08_00_00_br`, `README_extgen.md` there) as the external generator.
+Everything from step A to the mixer is shared; the differences:
+
+* **Program.** `nuwro_extgen`, a separate NuWro executable (stock `nuwro`
+  unchanged). One process per group (target, neutrino, current); each request
+  at its exact energy: channel k drawn with probability M_k/ΣM, NuWro event
+  of channel k, accepted with probability w/M_k (exact; a weight above M_k
+  stops it with exit code 3 and the group is retried with twice the Max). It
+  writes `served_events.txt` and `trial_stats.txt` itself (no converter).
+* **Environment.** NuWro needs ROOT and Pythia6 at run time; it is built
+  with e26 (`root v6_28_12 -q e26:p3915:prof`, `pythia v6_4_28x -q e26:prof`,
+  recorded in the tarball's `BUILD_INFO`) and always run through
+  `extgen_nuwro_run.sh`, which sets up exactly those products from CVMFS in an
+  empty environment (`env -i`), apart from the job's e17. Grid jobs check
+  that environment at setup (`extgen_nuwro_run.sh --check`).
+* **Card.** `extgen_nuwro_card.sh`: the physics of the NuWro MicroBooNE BNB
+  card for every group. QEL spectral function for C12, O16, Ar40, Fe56 (the
+  only nuclei NuWro has it for; `nuwro_extgen` refuses it elsewhere, where
+  NuWro would give weight 0 silently), local Fermi gas for the other nuclei
+  and free nucleons; Ar40 keeps the card's E_b and kF, other nuclei NuWro's
+  library values.
+* **Max per channel.** The Max table has one entry per NuWro channel (`dyn`);
+  serving takes margin × the largest weight of the channel around the
+  request's energy (default margin 3, floor 0: a channel without weight
+  there stays closed).
+
+Build, tables and production:
+
+1. Build in SL7 from a fresh shell: `NUWRO_REPO=<repo> build_nuwro.sh
+   <build_dir>` (exports one commit with `git archive`); pack:
+   `make_nuwro_tarball.sh <build_dir> nuwro_extgen.tar.gz`.
+2. Scan campaign: `extgen_nuwro_scan_jobs.py scan_jobs.txt` (default 268
+   jobs, 100000 trials per energy and channel, ~20–40 min each), submit
+   `extgen_nuwro_scan_grid.sh` (example in its header), then
+   `extgen_nuwro_tables.py scan_*/ --xsec STEM_xsec.txt --max STEM_max.txt`
+   and `extgen_make_splines.py STEM_xsec.txt STEM_xsec.xml --tune
+   NW25_11a_00_000 --cap 8 --extend-to 200`, with STEM =
+   `nuwro_<version>_<cardhash>` (first 8 hex digits of the md5 of
+   `extgen_nuwro_card.sh`), into uboonedata `genie/nuwro/`.
+3. Production XMLs as for GiBUU, with `extgen_nuwro_grid_init.sh
+   --stepa-fcl extgen_requests_nuwro_bnb_run4c.fcl --nevents auto
+   --nuwro-tarball ... --nuwro-md5 ... --tables genie/nuwro/<STEM>
+   --soft-fail` and `<endscript>extgen_nuwro_grid_continue.sh</endscript>`.
+   The job files are those of the GiBUU route (`extgen_job_summary.txt`,
+   `extgen_xsec_check.txt`, ...); NuWro runs about 10–20 s per group plus
+   ~12 ms per event.
 
 ## Production (grid)
 

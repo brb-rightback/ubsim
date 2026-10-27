@@ -1,0 +1,21 @@
+#
+# GENIE settings shared by all ExtGen NuWro request jobs (ubsim/ExtGen).
+#
+# GENIE selects neutrino, target, current, energy and vertex with NuWro's
+# total cross sections (tune NW25_11a_00_000); the final state is produced
+# later by NuWro (nuwro_extgen). The GENIE configuration is the one of the
+# GiBUU tune (extgen_genie_gibuu.fcl) under another name, so that NuWro and
+# GiBUU spline files can never be mixed up.
+#
+# Usage, with a GENIEGen module as physics.producers.generator:
+#   physics.producers.generator.TuneName:           @local::extgen_nuwro_tune
+#   physics.producers.generator.GXMLPATH:           @local::extgen_nuwro_gxmlpath
+#   physics.producers.generator.EventGeneratorList: @local::extgen_nuwro_eventgenlist
+
+BEGIN_PROLOG
+
+extgen_nuwro_tune:         "NW25_11a_00_000"
+extgen_nuwro_gxmlpath:     "$UBSIM_DIR/gxml"
+extgen_nuwro_eventgenlist: "Default"
+
+END_PROLOG

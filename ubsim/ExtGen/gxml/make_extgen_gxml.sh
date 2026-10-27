@@ -9,8 +9,12 @@
 # Generated files (do not edit by hand):
 #   master_config.xml                    + ExtGen algorithm -> file entries
 #   EventGenerator.xml                   + "ExtGenRequest" generation chain
-#   GB25_05a/ModelConfiguration.xml      G18_10a copy + XSecModel for ExtGenRequest
-#   GB25_05a/CommonParam.xml             G18_10a_02_11a copy + "ExtGen" param set
+#   <tune>/ModelConfiguration.xml        G18_10a copy + XSecModel for ExtGenRequest
+#   <tune>/CommonParam.xml               G18_10a_02_11a copy + "ExtGen" param set
+# for each ExtGen tune: GB25_05a (GiBUU 2025), NW25_11a (NuWro 25.11). The
+# tunes differ only in name (and their hand-written TuneGeneratorList.xml),
+# so splines of the two generators can never be mixed up: a spline file is
+# valid for one tune name only.
 #
 # The tune GB25_05a_00_000 has tuned-parameter set "00", which GENIE treats as
 # "configuration only" (TuneId::OnlyConfiguration): it never searches the
@@ -30,7 +34,7 @@ OUT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # The ExtGen tune is built on top of the G18_10a_02_11a configuration files.
 SRC_CMC=G18_10a
 SRC_TUNE=G18_10a_02_11a
-CMC=GB25_05a
+TUNE_DIRS="GB25_05a NW25_11a"
 
 for f in master_config.xml EventGenerator.xml \
          $SRC_CMC/ModelConfiguration.xml $SRC_CMC/$SRC_TUNE/CommonParam.xml; do
@@ -88,16 +92,12 @@ XML
 insert $GCONF/EventGenerator.xml '^</alg_conf>' $tmp/evgen.ins \
   | header "$GCONF/EventGenerator.xml" > $OUT/EventGenerator.xml
 
-# --- tune: ModelConfiguration.xml
-mkdir -p $OUT/$CMC
+# --- tunes: ModelConfiguration.xml
 cat > $tmp/model.ins <<'XML'
   <!-- ExtGen: total cross sections of the external generator (ubsim/ExtGen) -->
   <param type="alg" name="XSecModel@genie::EventGenerator/ExtGenRequest"> genie::ubext::ExtGenPXSec/Default </param>
 XML
-insert $GCONF/$SRC_CMC/ModelConfiguration.xml '<param_set name="Default">' $tmp/model.ins after \
-  | header "$GCONF/$SRC_CMC/ModelConfiguration.xml" > $OUT/$CMC/ModelConfiguration.xml
-
-# --- tune: CommonParam.xml
+# --- tunes: CommonParam.xml
 cat > $tmp/common.ins <<'XML'
   <!--
   ExtGen (ubsim/ExtGen): text table of the external generator's total
@@ -110,7 +110,12 @@ cat > $tmp/common.ins <<'XML'
   </param_set>
 
 XML
-insert $GCONF/$SRC_CMC/$SRC_TUNE/CommonParam.xml '</common_Param_list>' $tmp/common.ins \
-  | header "$GCONF/$SRC_CMC/$SRC_TUNE/CommonParam.xml" > $OUT/$CMC/CommonParam.xml
+for CMC in $TUNE_DIRS; do
+  mkdir -p $OUT/$CMC
+  insert $GCONF/$SRC_CMC/ModelConfiguration.xml '<param_set name="Default">' $tmp/model.ins after \
+    | header "$GCONF/$SRC_CMC/ModelConfiguration.xml" > $OUT/$CMC/ModelConfiguration.xml
+  insert $GCONF/$SRC_CMC/$SRC_TUNE/CommonParam.xml '</common_Param_list>' $tmp/common.ins \
+    | header "$GCONF/$SRC_CMC/$SRC_TUNE/CommonParam.xml" > $OUT/$CMC/CommonParam.xml
+done
 
 echo "Wrote ExtGen GENIE configuration overrides in $OUT from $GCONF"
