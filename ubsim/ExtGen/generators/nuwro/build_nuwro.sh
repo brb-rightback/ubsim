@@ -61,7 +61,6 @@ UPS_SETUP=${NUWRO_UPS_SETUP:-/cvmfs/uboone.opensciencegrid.org/products/setup_ub
   "It must be exported (export NUWRO_REPO=...) or given on the command line" \
   "(NUWRO_REPO=... ./build_nuwro.sh): a plain shell variable is not passed to the script." >&2; exit 1; }
 REPO=$(realpath "$REPO")
-git -C "$REPO" rev-parse --git-dir > /dev/null 2>&1 || { echo "ERROR: $REPO is not a git repository" >&2; exit 1; }
 case "$BUILD_DIR/" in
   "$REPO"/*) echo "ERROR: build_dir must be outside the NuWro repository" >&2; exit 1 ;;
 esac
@@ -84,7 +83,13 @@ for t in g++ gfortran make git root-config; do
   command -v "$t" > /dev/null || { echo "ERROR: $t not found" >&2; exit 1; }
 done
 [ -n "${PYTHIA_FQ_DIR:-}" ] || { echo "ERROR: Pythia6 (PYTHIA_FQ_DIR) not set up" >&2; exit 1; }
-echo "Using ROOT $(root-config --version), $(g++ --version | head -1), Pythia6 in $PYTHIA_FQ_DIR"
+# The repository check needs the UPS git: the SL7 system git (1.8.3) has no
+# 'git -C', so it fails on any directory.
+if ! gerr=$(git -C "$REPO" rev-parse --git-dir 2>&1); then
+  echo "ERROR: $REPO is not a git repository ($(command -v git): $gerr)" >&2
+  exit 1
+fi
+echo "Using ROOT $(root-config --version), $(g++ --version | head -1), Pythia6 in $PYTHIA_FQ_DIR, $(git --version)"
 set -euo pipefail
 
 mkdir -p "$BUILD_DIR"

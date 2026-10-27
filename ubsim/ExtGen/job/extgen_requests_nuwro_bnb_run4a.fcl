@@ -5,7 +5,7 @@
 # extgen_nuwro_grid_init.sh). The process name stays ExtGenRequests (read by
 # name in extgen_merge.fcl).
 
-#include "extgen_genie_nuwro.fcl"   // prolog: before any body statement
+#include "extgen_genie_nuwro.fcl"
 #include "extgen_requests_bnb_run4a.fcl"
 
 physics.producers.generator.TuneName:           @local::extgen_nuwro_tune
