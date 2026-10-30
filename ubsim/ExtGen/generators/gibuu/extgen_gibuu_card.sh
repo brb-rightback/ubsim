@@ -25,7 +25,15 @@
 #   * densitySwitch_Static: 2 (NPA 554 densities, as in that card) for the
 #     nuclei GiBUU has them for (C, O16, Al, Ar, Ca40, Fe), 3 (GiBUU's
 #     default Woods-Saxon after Lenske, any nucleus) for all others;
-#   * built-in analysis output switched off (it does not affect the events).
+#   * built-in analysis output switched off (it does not affect the events);
+#   * eta, omega, eta' and phi (GiBUU IDs 102, 105, 106, 107) have stability 1
+#     (&ModifyParticles): they may still decay during the transport, as in
+#     GiBUU's default (stability 3), but are not forced to decay at the end,
+#     so those that leave the nucleus are written out (PDG 221, 223, 331, 333)
+#     and decayed by Geant4 with its full decay tables;
+#   * photons are kept (propagateNoPhoton=.false.; GiBUU's default discards
+#     them), e.g. from omega -> pi0 gamma during the transport.
+#   Neither change affects the cross sections (scans have no FSI time steps).
 
 set -euo pipefail
 
@@ -173,6 +181,14 @@ cat <<EOF
 
 &insertion
       minimumEnergy=0.005
+      propagateNoPhoton=.false.
+/
+
+&ModifyParticles
+      stabilityFlag(102)=1
+      stabilityFlag(105)=1
+      stabilityFlag(106)=1
+      stabilityFlag(107)=1
 /
 
 &neutrinoAnalysis

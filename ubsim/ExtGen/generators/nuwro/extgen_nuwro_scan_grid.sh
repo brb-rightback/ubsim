@@ -9,7 +9,7 @@
 #
 # Input files, passed with jobsub -f (found in $CONDOR_DIR_INPUT):
 #   the NuWro tarball (make_nuwro_tarball.sh; the only *.tar.gz)
-#   scan_jobs.txt (the job list)
+#   scan_jobs.txt (the job list; refused unless written by extgen_nuwro_scan_jobs.py)
 #
 # NuWro runs with the e26 ROOT/Pythia6 of its build, set up from CVMFS
 # (extgen_nuwro_run.sh); the job needs no uboonecode.
@@ -40,6 +40,10 @@ IN=${CONDOR_DIR_INPUT:-$PWD}
 TARBALL=$(ls "$IN"/*.tar.gz 2>/dev/null | head -1)
 [ -n "$TARBALL" ] || die "no NuWro tarball in $IN"
 [ -f "$IN/scan_jobs.txt" ] || die "no scan_jobs.txt in $IN"
+# the GiBUU campaign's job list has the same name and format: refuse anything
+# not written by extgen_nuwro_scan_jobs.py
+head -1 "$IN/scan_jobs.txt" | grep -q '(extgen_nuwro_scan_jobs.py)' \
+  || die "scan_jobs.txt is not a NuWro job list (first line: $(head -1 "$IN/scan_jobs.txt"))"
 
 LINE=$(awk -v i="$IDX" '!/^#/ && $1 == i' "$IN/scan_jobs.txt")
 [ -n "$LINE" ] || die "job $IDX not in scan_jobs.txt"
