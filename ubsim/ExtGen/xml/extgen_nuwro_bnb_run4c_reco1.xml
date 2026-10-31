@@ -36,9 +36,9 @@
 <!ENTITY name         "extgen_nuwro_bnb_run4c_test_reco1">  <!-- production: extgen_nuwro_bnb_run4c -->
 <!ENTITY extgen_dir   "/pnfs/uboone/resilient/users/bbogart/extgen">
 <!ENTITY ext_samdef   "prod_extunbiased_swizzle_crt_inclusive_v7c_goodruns_mcc9_run4c_bnb_nuwro_overlay">
-<!ENTITY nuwro_tar    "nuwro_extgen.tar.gz">
-<!ENTITY nuwro_md5    "01f6a301c9abeb029b25077a65334607">  <!-- md5sum of nuwro_extgen.tar.gz (build 32065e3) -->
-<!ENTITY tables       "genie/nuwro/nuwro_25_11_1_0bbe5a54">
+<!ENTITY nuwro_tar    "nuwro_extgen_595c318a.tar.gz">
+<!ENTITY nuwro_md5    "4da72f88e63a67f8100c50251c38a334">  <!-- md5sum of nuwro_extgen_595c318a.tar.gz (build 32065e3, card 595c318a: NC TEM MEC, NC spp_precision 8000) -->
+<!ENTITY tables       "genie/nuwro/nuwro_25_11_1_595c318a">  <!-- scan campaign 4 (nuwro_scan4_submit/) -->
 <!ENTITY numjobs      "10">   <!-- test; production: number of EXT files -->
 ]>
 

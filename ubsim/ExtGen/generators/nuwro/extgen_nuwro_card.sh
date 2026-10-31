@@ -26,12 +26,21 @@
 #   * channels: all of the group's current (CC: QEL, RES, DIS, COH, MEC, HYP;
 #     NC: QEL, RES, DIS, COH, MEC); neutrino-electron scattering off. HYP is
 #     on for neutrinos too (zero cross section: never generated);
-#   * spp_precision = 2000 (card: 500): the number of sampled points per bin
-#     of NuWro's RES-DIS boundary tables, built at start-up; nuwro_extgen
+#   * spp_precision per current (card: 500): the number of sampled points per
+#     bin of NuWro's RES-DIS boundary tables, built at start-up; nuwro_extgen
 #     builds them with one fixed seed in every process, so their noise is a
-#     fixed offset of the RES cross sections, ~4.5% on Ar40 numu NC RES at
-#     500, ~2% at 2000, for ~50 s more start-up per group (67 s instead of 19);
-#   * no NuWro test or real events (nuwro_extgen makes the events).
+#     fixed offset of the RES cross sections. CC: 2000, converged (Ar40 numu
+#     CC RES at 8000 / 2000 = 1.000 +- 0.001, 0.4-4 GeV). NC: 8000; at 2000
+#     Ar40 numu NC RES was 2-4% high, and 8000, 16000 and 32000 agree within
+#     0.1-0.4% (0.6-3 GeV; nuwroval/spp_test, 2026-10-31). Start-up per group
+#     on the grid: NC ~3 min at 2000, ~7.5 min at 8000;
+#   * no NuWro test or real events (nuwro_extgen makes the events);
+#   * MEC model per current: CC mec_kind = 6 (2020 Valencia, as the card); NC
+#     mec_kind = 1 (TEM). NuWro implements NC MEC only for TEM (nuwro.cc,
+#     case 9: "only TEM for NC"); with any other mec_kind the NC MEC channel
+#     has weight 0, so the card's NC MEC (dyn_mec_nc = 1) would give no events.
+#     TEM reads only mec_ratio_pp, mec_central_motion,
+#     mec_back_to_back_smearing and mec_pb_trials, set below for both currents.
 # random_seed is set on nuwro_extgen's command line (-p random_seed=N).
 
 set -euo pipefail
@@ -57,8 +66,8 @@ N=$(( A - Z ))
 [ "$A" -ge 1 ] && [ "$N" -ge 0 ] || die "bad target $TGT (Z=$Z A=$A)"
 case "$NU" in 12|-12|14|-14) ;; *) die "neutrino $NU not supported (12, -12, 14, -14)" ;; esac
 case "$CUR" in
-  CC) C=1; NCF=0 ;;
-  NC) C=0; NCF=1 ;;
+  CC) C=1; NCF=0; MECKIND=6; MECNAME="2020 Valencia"; SPP=2000 ;;
+  NC) C=0; NCF=1; MECKIND=1; MECNAME="TEM: NuWro's only NC MEC model"; SPP=8000 ;;
   *) die "current must be CC or NC" ;;
 esac
 
@@ -155,7 +164,7 @@ delta_FF_set           = 1
 pion_axial_mass        = 0.94
 pion_C5A               = 1.19
 delta_angular          = 2
-spp_precision          = 2000   // card: 500; see the header
+spp_precision          = $SPP   // card: 500; per current, see the header
 bkgrscaling            = 0.0
 res_dis_cut            = 1900
 res_dis_blending_start = 1600
@@ -168,7 +177,7 @@ coh_mass_correction = 1
 
 ################################################################################
 # MEC
-mec_kind                  = 6    // 2020 Valencia
+mec_kind                  = $MECKIND    // $MECNAME
 mec_ratio_pp              = 0.85
 mec_central_motion        = 0
 mec_back_to_back_smearing = 0
