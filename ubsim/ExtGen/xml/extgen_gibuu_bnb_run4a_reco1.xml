@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+
+<!-- Production template: edit the entities marked SET_ME.
+     GiBUU v08_00_00_br 8cfc370 (multi-run fix, random real-pert pairing, redraw after the
+     just-collided veto) with card 25a5f19f (eta, omega, eta', phi written out, photons kept).
+     The cross-section and Max tables are from build a4dbdba and card 516d3a20: the FSI changes
+     and the card changes do not affect them (scans have no FSI time steps), and
+     allow-build-mismatch lets the job accept the build and card lines of the tables.
+
+     ExtGen GiBUU overlay, BNB run 4a: production through reco1 (P4).
+     Each job takes one BNB run 4a EXT file and runs
+       extgen_gibuu_grid_init.sh, nevents auto (initscript): setup, checks:
+                                  GiBUU tarball, tables, seeds
+       extgen_ext_copy.fcl        copies the EXT file into the job; its
+                                  endscript extgen_gibuu_grid_continue.sh
+                                  counts its events N and runs steps A-D
+                                  (N GENIE requests with GiBUU cross sections,
+                                  GiBUU final states, merge)
+                                  -> genfile.root.local with N events
+       extgen_overlay_SimInfoMixer.fcl, then the standard overlay chain:
+       g4, detsim, overlay, reco1 stages 1a/1b/1c.
+       Differs from run 4c only in the flux of step A (the run-4a gsimple set) and the EXT data.
+
+     Before submitting:
+       * set the SET_ME entities: numjobs is one job per EXT file;
+       * release must be a uboonecode release whose uboonedata has the tables and
+         the GiBUU tarball named in gibuu_tar (found along FW_SEARCH_PATH).
+     Every job keeps its seeds, requests, served events and the in-job cross
+     section check (V4) in its log tarball; summarise V4 over the production
+     with extgen_gibuu_v4_summary.py.
+-->
+
+<!DOCTYPE project [
+<!ENTITY release      "v08_00_00_98">
+<!ENTITY qual         "e17:prof">
+<!ENTITY user         ""> <!-- SET_ME -->
+<!ENTITY name         "">  <!-- SET_ME -->
+<!ENTITY ext_samdef   "">  <!-- SET_ME -->
+<!ENTITY gibuu_tar    "genie/gibuu/gibuu_2025p5_8cfc370.tar.gz">  <!-- in uboonedata -->
+<!ENTITY gibuu_md5    "a6850ad78fb521f701fc87c14235abc2">  <!-- md5sum of the tarball (8cfc370, card 25a5f19f) -->
+<!ENTITY tables       "genie/gibuu/gibuu_2025p5_516d3a20">
+<!ENTITY numjobs      "">   <!-- SET_ME -->
+]>
+
+<job>
+
+<project name="&name;_reco1">
+
+  <numevents>-1</numevents>
+  <os>SL7</os>
+  <resource>DEDICATED,OPPORTUNISTIC</resource>
+
+  <larsoft>
+    <tag>&release;</tag>
+    <qual>&qual;</qual>
+  </larsoft>
+
+  <check>1</check>
+  <copy>0</copy>
+  <version>prod_&release;</version>
+
+  <stage name="reco1">
+
+    <inputdef>&ext_samdef;</inputdef>
+
+    <!-- setup for steps A-D; the tarball and tables are read from uboonedata -->
+    <initscript>extgen_gibuu_grid_init.sh --stepa-fcl extgen_requests_bnb_run4a.fcl --nevents auto --gibuu-tarball &gibuu_tar; --gibuu-md5 &gibuu_md5; --tables &tables; --allow-build-mismatch --soft-fail</initscript>
+
+    <!-- EXT file into the job, then steps A-D with N = its events -->
+    <fcl>extgen_ext_copy.fcl
+      <endscript>extgen_gibuu_grid_continue.sh</endscript>
+    </fcl>
+    <fcl>extgen_overlay_SimInfoMixer.fcl</fcl>
+    <fcl>wirecell_g4_uboone.fcl</fcl>
+    <fcl>wirecell_detsim_overlay_uboone.fcl</fcl>
+    <fcl>standard_overlay_uboone.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_overlay_stage1a.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_overlay_stage1b.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_overlay_stage1c.fcl</fcl>
+
+    <outdir>/pnfs/uboone/scratch/users/&user;/&release;/&name;/reco1</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user;/&release;/&name;/reco1</logdir>
+    <workdir>/pnfs/uboone/resilient/users/&user;/work/&release;/&name;/reco1</workdir>
+    <bookdir>/pnfs/uboone/resilient/users/&user;/book/&release;/&name;/reco1</bookdir>
+
+    <maxfilesperjob>1</maxfilesperjob>
+    <numjobs>&numjobs;</numjobs>
+    <memory>4000</memory>
+    <disk>35GB</disk>
+    <prestagefraction>0.99</prestagefraction>
+    <datatier>reconstructed</datatier>
+    <jobsub>--expected-lifetime=12h -e IFDH_CP_UNLINK_ON_ERROR=1 --subgroup=prod --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)'</jobsub>
+    <jobsub_start>--subgroup=prod --expected-lifetime=12h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+  </stage>
+
+  <filetype>overlay</filetype>
+  <runtype>physics</runtype>
+
+</project>
+
+</job>

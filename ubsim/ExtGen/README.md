@@ -31,7 +31,7 @@ area.
 | `job/` | fcl files: `extgen_modules.fcl` (module prologs), `extgen_requests_test_bnb.fcl` (step A test), `extgen_dump_requests.fcl` (step B), `extgen_merge.fcl` (step D, also writes the per-event POT `potinevent:SubRunPOT`), `extgen_overlay_SimInfoMixer.fcl` (overlay on EXT, exact POT per mixed event), `extgen_closure_*.fcl` (GENIE closure test); step A of production: `extgen_requests_{bnb_run4c,bnb_run4a,numi_fhc,numi_rhc}.fcl` (GiBUU tune) and `extgen_requests_nuwro_*.fcl` (the same with the NuWro tune, `extgen_genie_nuwro.fcl`). |
 | `generators/gibuu/` | `build_gibuu.sh`: builds GiBUU for grid jobs from a commit of the MicroBooNE GiBUU repository (official release on `main`, MicroBooNE patches such as request mode on `v08_00_00_br`); run by hand in SL7. `extgen_gibuu_card.sh`: the GiBUU card of every ExtGen GiBUU run (one set of physics settings). `extgen_gibuu_scan.sh`: one scan (request mode 2) for the tables; `extgen_gibuu_energies.txt`: its energy grid. `make_gibuu_tarball.sh` and `extgen_gibuu_scan_grid.sh`: the grid scan campaign. `extgen_gibuu_convert`: GiBUU request-mode output to `served_events.txt` and `trial_stats.txt` (step C). `extgen_gibuu_serve.sh`: step C for one job's requests. `extgen_gibuu_xsec_check.sh`: in-job cross-section check (V4). `extgen_gibuu_grid_init.sh`: the project.py `<initscript>` of production jobs (steps A–D, leaving `genfile.root.local` for `extgen_overlay_SimInfoMixer.fcl`). |
 | `generators/nuwro/` | NuWro route (NuWro branch `v08_00_00_br`, program `nuwro_extgen`): `build_nuwro.sh` (SL7, e26 ROOT/Pythia6), `make_nuwro_tarball.sh`, `extgen_nuwro_run.sh` (runs NuWro in a clean e26 environment), `extgen_nuwro_card.sh`, `extgen_nuwro_scan.sh` + `extgen_nuwro_scan_grid.sh` + `extgen_nuwro_energies.txt` (scan campaign), `extgen_nuwro_serve.sh` (step C), `extgen_nuwro_grid_init.sh` + `extgen_nuwro_grid_continue.sh` (production jobs). See "NuWro route" below. |
-| `xml/` | Example project.py XML (`extgen_gibuu_bnb_run4c_test.xml`: 10-job grid test). |
+| `xml/` | project.py templates for reco1, one per generator and sample: `extgen_{gibuu,nuwro}_{bnb_run4c,bnb_run4a,numi_fhc,numi_rhc}_reco1.xml`. |
 
 Cross section splines for production live in uboonedata, under `genie/gibuu/` (and `genie/nuwro/`).
 
@@ -175,10 +175,19 @@ kinematics, Q², leading proton, hadronic energy; the tests of GiBUU's V3).
 
 ## Production (grid)
 
-One grid job per EXT file. `xml/extgen_gibuu_bnb_run4c_reco1.xml` and
-`xml/extgen_gibuu_bnb_run4c_reco2.xml` are the templates (BNB run 4c).
+One grid job per EXT file. `xml/` has one reco1 template per generator and
+sample, `extgen_<generator>_<sample>_reco1.xml`:
 
-**reco1 job** (release v08_00_00_98 with this area as local products):
+| Sample | Templates | Step A | Chain |
+|---|---|---|---|
+| BNB run 4c (and every BNB period except 4a) | `extgen_{gibuu,nuwro}_bnb_run4c_reco1.xml` | `extgen_requests_[nuwro_]bnb_run4c.fcl` | BNB |
+| BNB run 4a | `extgen_{gibuu,nuwro}_bnb_run4a_reco1.xml` | `extgen_requests_[nuwro_]bnb_run4a.fcl` (run-4a flux set) | BNB |
+| NuMI FHC, RHC | `extgen_{gibuu,nuwro}_numi_{fhc,rhc}_reco1.xml` | `extgen_requests_[nuwro_]numi_{fhc,rhc}.fcl` (dk2nu flux, NuMI timing) | NuMI: `wirecell_detsim_overlay_numi_uboone.fcl`, `standard_overlay_numi_uboone.fcl`, `reco_uboone_mcc9_8_driver_overlay_numi_stage1c.fcl` |
+
+The BNB run 4c templates are the ones used in production so far; the BNB run 4a and
+NuMI templates have not been run yet.
+
+**reco1 job** (GiBUU; NuWro runs the matching `extgen_nuwro_*` scripts):
 
 | Step | What | Where |
 |---|---|---|
@@ -189,15 +198,16 @@ One grid job per EXT file. `xml/extgen_gibuu_bnb_run4c_reco1.xml` and
 
 **reco2 job** (v10_04_07_26): the MCC10 reco2 workflow, with the standard
 `run_combinedrecotree_overlay.fcl` (ExtGen events have MCFlux and GTruth) and
-`xml/def_filetype_extgen_gibuu_overlay.sh` for the Wire-Cell FileType.
+a `def_filetype` initsource script for the Wire-Cell FileType (in ubana).
 
 **Before submitting reco1:**
-1. Build (`mrb i`), make the local products tarball (`make_tarball.sh
-   local_<release>.tar`) and put it, and the GiBUU tarball
-   (`make_gibuu_tarball.sh`), in the XML's `extgen_dir`. The tables come with
-   uboonedata in the products tarball.
-2. In the XML: `ext_samdef`, `gibuu_md5` (md5sum of the GiBUU tarball),
-   `tables`, `name`, `numjobs`.
+1. Use a release whose uboonedata has the tables and the generator tarball:
+   `genie/gibuu/gibuu_<version>_<commit7>.tar.gz` (`make_gibuu_tarball.sh`) or
+   `genie/nuwro/nuwro_<version>_<cardhash>.tar.gz` (`make_nuwro_tarball.sh`).
+   The jobs find both along FW_SEARCH_PATH and check the tarball's md5.
+2. In the XML: the `SET_ME` entities `user`, `name`, `ext_samdef`, `numjobs`, and
+   `release`. After a new generator build or card also the tarball name, its md5
+   and `tables`.
 3. `project.py --xml <xml> --stage reco1 --submit`.
 
 **Per job** (in the job's `log.tar`):

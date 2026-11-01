@@ -1,6 +1,13 @@
 <?xml version="1.0"?>
 
-<!-- ExtGen GiBUU overlay, BNB run 4c: production through reco1 (P4).
+<!-- Production template: edit the entities marked SET_ME.
+     GiBUU v08_00_00_br 8cfc370 (multi-run fix, random real-pert pairing, redraw after the
+     just-collided veto) with card 25a5f19f (eta, omega, eta', phi written out, photons kept).
+     The cross-section and Max tables are from build a4dbdba and card 516d3a20: the FSI changes
+     and the card changes do not affect them (scans have no FSI time steps), and
+     allow-build-mismatch lets the job accept the build and card lines of the tables.
+
+     ExtGen GiBUU overlay, BNB run 4c: production through reco1 (P4).
      Each job takes one run-4c EXT file and runs
        extgen_gibuu_grid_init.sh, nevents auto (initscript): setup, checks:
                                   GiBUU tarball, tables, seeds
@@ -13,12 +20,11 @@
        extgen_overlay_SimInfoMixer.fcl, then the standard run-4c overlay chain
        (as the HepMC GiBUU production, v08_00_00_90/prod_hepmc/prod_gibuu/BNB):
        g4, detsim, overlay, reco1 stages 1a/1b/1c.
-     reco2 (MCC10, v10 release): extgen_gibuu_bnb_run4c_reco2.xml.
 
      Before submitting:
-       * put the GiBUU tarball and the local products tarball of the mrb area
-         (with ubsim and uboonedata, i.e. the tables) in &extgen_dir;;
-       * set numjobs (one EXT file per job).
+       * set the SET_ME entities: numjobs is one job per EXT file;
+       * release must be a uboonecode release whose uboonedata has the tables and
+         the GiBUU tarball named in gibuu_tar (found along FW_SEARCH_PATH).
      Every job keeps its seeds, requests, served events and the in-job cross
      section check (V4) in its log tarball; summarise V4 over the production
      with extgen_gibuu_v4_summary.py.
@@ -27,14 +33,13 @@
 <!DOCTYPE project [
 <!ENTITY release      "v08_00_00_98">
 <!ENTITY qual         "e17:prof">
-<!ENTITY user         "bbogart">
-<!ENTITY name         "extgen_gibuu_bnb_run4c_test_reco1">  <!-- production: extgen_gibuu_bnb_run4c -->
-<!ENTITY extgen_dir   "/pnfs/uboone/resilient/users/bbogart/extgen">
-<!ENTITY ext_samdef   "prod_extunbiased_swizzle_crt_inclusive_v7c_goodruns_mcc9_run4c_bnb_nuwro_overlay">
-<!ENTITY gibuu_tar    "gibuu_scan.tar.gz">
-<!ENTITY gibuu_md5    "363b4beee57efd6ecde56d8dedd3eb4a">  <!-- md5sum of gibuu_scan.tar.gz (build a4dbdba) -->
+<!ENTITY user         ""> <!-- SET_ME -->
+<!ENTITY name         "">  <!-- SET_ME -->
+<!ENTITY ext_samdef   "">  <!-- SET_ME -->
+<!ENTITY gibuu_tar    "genie/gibuu/gibuu_2025p5_8cfc370.tar.gz">  <!-- in uboonedata -->
+<!ENTITY gibuu_md5    "a6850ad78fb521f701fc87c14235abc2">  <!-- md5sum of the tarball (8cfc370, card 25a5f19f) -->
 <!ENTITY tables       "genie/gibuu/gibuu_2025p5_516d3a20">
-<!ENTITY numjobs      "10">   <!-- test; production: number of EXT files -->
+<!ENTITY numjobs      "">   <!-- SET_ME -->
 ]>
 
 <job>
@@ -43,15 +48,14 @@
 
   <numevents>-1</numevents>
   <os>SL7</os>
-  <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+  <resource>DEDICATED,OPPORTUNISTIC</resource>
 
   <larsoft>
     <tag>&release;</tag>
     <qual>&qual;</qual>
-    <local>&extgen_dir;/local_&release;.tar</local>
   </larsoft>
 
-  <check>0</check>
+  <check>1</check>
   <copy>0</copy>
   <version>prod_&release;</version>
 
@@ -59,8 +63,8 @@
 
     <inputdef>&ext_samdef;</inputdef>
 
-    <!-- setup for steps A-D; files passed with jobsub -f are found in $CONDOR_DIR_INPUT -->
-    <initscript>extgen_gibuu_grid_init.sh --stepa-fcl extgen_requests_bnb_run4c.fcl --nevents auto --gibuu-tarball &extgen_dir;/&gibuu_tar; --gibuu-md5 &gibuu_md5; --tables &tables; --soft-fail</initscript>
+    <!-- setup for steps A-D; the tarball and tables are read from uboonedata -->
+    <initscript>extgen_gibuu_grid_init.sh --stepa-fcl extgen_requests_bnb_run4c.fcl --nevents auto --gibuu-tarball &gibuu_tar; --gibuu-md5 &gibuu_md5; --tables &tables; --allow-build-mismatch --soft-fail</initscript>
 
     <!-- EXT file into the job, then steps A-D with N = its events -->
     <fcl>extgen_ext_copy.fcl
@@ -85,7 +89,7 @@
     <disk>35GB</disk>
     <prestagefraction>0.99</prestagefraction>
     <datatier>reconstructed</datatier>
-    <jobsub>--expected-lifetime=12h -e IFDH_CP_UNLINK_ON_ERROR=1 --subgroup=prod --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)' -f &extgen_dir;/&gibuu_tar;</jobsub>
+    <jobsub>--expected-lifetime=12h -e IFDH_CP_UNLINK_ON_ERROR=1 --subgroup=prod --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)'</jobsub>
     <jobsub_start>--subgroup=prod --expected-lifetime=12h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
   </stage>
 

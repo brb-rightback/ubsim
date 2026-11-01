@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+
+<!-- Production template: edit the entities marked SET_ME.
+     NuWro build 32065e3 with card 595c318a (NC TEM MEC, NC spp_precision 8000) and tables
+     nuwro_25_11_1_595c318a in uboonedata.
+
+     ExtGen NuWro overlay, NuMI FHC: production through reco1.
+     The NuWro counterpart of extgen_gibuu_bnb_run4c_reco1.xml; only the
+     generator part differs. Each job takes one NuMI FHC EXT file and runs
+       extgen_nuwro_grid_init.sh, nevents auto (initscript): setup, checks:
+                                  NuWro tarball and its e26 environment,
+                                  tables, seeds
+       extgen_ext_copy.fcl        copies the EXT file into the job; its
+                                  endscript extgen_nuwro_grid_continue.sh
+                                  counts its events N and runs steps A-D
+                                  (N GENIE requests with NuWro cross sections,
+                                  tune NW25_11a_00_000; NuWro final states;
+                                  merge)
+                                  -> genfile.root.local with N events
+       extgen_overlay_SimInfoMixer.fcl, then the standard NuMI overlay chain:
+       g4, detsim, overlay, reco1 stages 1a/1b/1c.
+       The NuMI detsim, overlay and stage 1c fcls differ from the BNB ones in the trigger
+       simulation and the optical filter. Sample: E_nu below the 8 GeV cap of the tables, with
+       the POT of the whole flux.
+
+     NuWro runs with the e26 ROOT/Pythia6 of its build, set up from the
+     larsoft CVMFS repository (extgen_nuwro_run.sh), hence the extra
+     condor requirement.
+
+     Before submitting:
+       * set the SET_ME entities: numjobs is one job per EXT file;
+       * release must be a uboonecode release whose uboonedata has the tables and
+         the NuWro tarball named in nuwro_tar (found along FW_SEARCH_PATH).
+     Every job keeps its seeds, requests, served events and the in-job cross
+     section check (V4) in its log tarball.
+-->
+
+<!DOCTYPE project [
+<!ENTITY release      "v08_00_00_98">
+<!ENTITY qual         "e17:prof">
+<!ENTITY user         ""> <!-- SET_ME -->
+<!ENTITY name         "">  <!-- SET_ME -->
+<!ENTITY ext_samdef   "">  <!-- SET_ME -->
+<!ENTITY nuwro_tar    "genie/nuwro/nuwro_25_11_1_595c318a.tar.gz">  <!-- in uboonedata -->
+<!ENTITY nuwro_md5    "4da72f88e63a67f8100c50251c38a334">  <!-- md5sum of the tarball (build 32065e3, card 595c318a) -->
+<!ENTITY tables       "genie/nuwro/nuwro_25_11_1_595c318a">  <!-- scan campaign 4 -->
+<!ENTITY numjobs      "">   <!-- SET_ME -->
+]>
+
+<job>
+
+<project name="&name;_reco1">
+
+  <numevents>-1</numevents>
+  <os>SL7</os>
+  <resource>DEDICATED,OPPORTUNISTIC</resource>
+
+  <larsoft>
+    <tag>&release;</tag>
+    <qual>&qual;</qual>
+  </larsoft>
+
+  <check>1</check>
+  <copy>0</copy>
+  <version>prod_&release;</version>
+
+  <stage name="reco1">
+
+    <inputdef>&ext_samdef;</inputdef>
+
+    <!-- setup for steps A-D; the tarball and tables are read from uboonedata -->
+    <initscript>extgen_nuwro_grid_init.sh --stepa-fcl extgen_requests_nuwro_numi_fhc.fcl --nevents auto --nuwro-tarball &nuwro_tar; --nuwro-md5 &nuwro_md5; --tables &tables; --soft-fail</initscript>
+
+    <!-- EXT file into the job, then steps A-D with N = its events -->
+    <fcl>extgen_ext_copy.fcl
+      <endscript>extgen_nuwro_grid_continue.sh</endscript>
+    </fcl>
+    <fcl>extgen_overlay_SimInfoMixer.fcl</fcl>
+    <fcl>wirecell_g4_uboone.fcl</fcl>
+    <fcl>wirecell_detsim_overlay_numi_uboone.fcl</fcl>
+    <fcl>standard_overlay_numi_uboone.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_overlay_stage1a.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_overlay_stage1b.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_overlay_numi_stage1c.fcl</fcl>
+
+    <outdir>/pnfs/uboone/scratch/users/&user;/&release;/&name;/reco1</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user;/&release;/&name;/reco1</logdir>
+    <workdir>/pnfs/uboone/resilient/users/&user;/work/&release;/&name;/reco1</workdir>
+    <bookdir>/pnfs/uboone/resilient/users/&user;/book/&release;/&name;/reco1</bookdir>
+
+    <maxfilesperjob>1</maxfilesperjob>
+    <numjobs>&numjobs;</numjobs>
+    <memory>4000</memory>
+    <disk>35GB</disk>
+    <prestagefraction>0.99</prestagefraction>
+    <datatier>reconstructed</datatier>
+    <jobsub>--expected-lifetime=12h -e IFDH_CP_UNLINK_ON_ERROR=1 --subgroup=prod --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.HAS_CVMFS_larsoft_opensciencegrid_org==true)'</jobsub>
+    <jobsub_start>--subgroup=prod --expected-lifetime=12h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+  </stage>
+
+  <filetype>overlay</filetype>
+  <runtype>physics</runtype>
+
+</project>
+
+</job>

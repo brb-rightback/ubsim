@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 
-<!-- ExtGen NuWro overlay, BNB run 4c: production through reco1.
+<!-- Production template: edit the entities marked SET_ME.
+     NuWro build 32065e3 with card 595c318a (NC TEM MEC, NC spp_precision 8000) and tables
+     nuwro_25_11_1_595c318a in uboonedata.
+
+     ExtGen NuWro overlay, BNB run 4c: production through reco1.
      The NuWro counterpart of extgen_gibuu_bnb_run4c_reco1.xml; only the
      generator part differs. Each job takes one run-4c EXT file and runs
        extgen_nuwro_grid_init.sh, nevents auto (initscript): setup, checks:
@@ -21,10 +25,9 @@
      condor requirement.
 
      Before submitting:
-       * put the NuWro tarball (make_nuwro_tarball.sh) and the local products
-         tarball of the mrb area (with ubsim and uboonedata, i.e. the tables
-         genie/nuwro/) in &extgen_dir;;
-       * set numjobs (one EXT file per job).
+       * set the SET_ME entities: numjobs is one job per EXT file;
+       * release must be a uboonecode release whose uboonedata has the tables and
+         the NuWro tarball named in nuwro_tar (found along FW_SEARCH_PATH).
      Every job keeps its seeds, requests, served events and the in-job cross
      section check (V4) in its log tarball.
 -->
@@ -32,14 +35,13 @@
 <!DOCTYPE project [
 <!ENTITY release      "v08_00_00_98">
 <!ENTITY qual         "e17:prof">
-<!ENTITY user         "bbogart">
-<!ENTITY name         "extgen_nuwro_bnb_run4c_test_reco1">  <!-- production: extgen_nuwro_bnb_run4c -->
-<!ENTITY extgen_dir   "/pnfs/uboone/resilient/users/bbogart/extgen">
-<!ENTITY ext_samdef   "prod_extunbiased_swizzle_crt_inclusive_v7c_goodruns_mcc9_run4c_bnb_nuwro_overlay">
-<!ENTITY nuwro_tar    "nuwro_extgen_595c318a.tar.gz">
-<!ENTITY nuwro_md5    "4da72f88e63a67f8100c50251c38a334">  <!-- md5sum of nuwro_extgen_595c318a.tar.gz (build 32065e3, card 595c318a: NC TEM MEC, NC spp_precision 8000) -->
-<!ENTITY tables       "genie/nuwro/nuwro_25_11_1_595c318a">  <!-- scan campaign 4 (nuwro_scan4_submit/) -->
-<!ENTITY numjobs      "10">   <!-- test; production: number of EXT files -->
+<!ENTITY user         ""> <!-- SET_ME -->
+<!ENTITY name         "">  <!-- SET_ME -->
+<!ENTITY ext_samdef   "">  <!-- SET_ME -->
+<!ENTITY nuwro_tar    "genie/nuwro/nuwro_25_11_1_595c318a.tar.gz">  <!-- in uboonedata -->
+<!ENTITY nuwro_md5    "4da72f88e63a67f8100c50251c38a334">  <!-- md5sum of the tarball (build 32065e3, card 595c318a) -->
+<!ENTITY tables       "genie/nuwro/nuwro_25_11_1_595c318a">  <!-- scan campaign 4 -->
+<!ENTITY numjobs      "">   <!-- SET_ME -->
 ]>
 
 <job>
@@ -48,15 +50,14 @@
 
   <numevents>-1</numevents>
   <os>SL7</os>
-  <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+  <resource>DEDICATED,OPPORTUNISTIC</resource>
 
   <larsoft>
     <tag>&release;</tag>
     <qual>&qual;</qual>
-    <local>&extgen_dir;/local_&release;.tar</local>
   </larsoft>
 
-  <check>0</check>
+  <check>1</check>
   <copy>0</copy>
   <version>prod_&release;</version>
 
@@ -64,8 +65,8 @@
 
     <inputdef>&ext_samdef;</inputdef>
 
-    <!-- setup for steps A-D; files passed with jobsub -f are found in $CONDOR_DIR_INPUT -->
-    <initscript>extgen_nuwro_grid_init.sh --stepa-fcl extgen_requests_nuwro_bnb_run4c.fcl --nevents auto --nuwro-tarball &extgen_dir;/&nuwro_tar; --nuwro-md5 &nuwro_md5; --tables &tables; --soft-fail</initscript>
+    <!-- setup for steps A-D; the tarball and tables are read from uboonedata -->
+    <initscript>extgen_nuwro_grid_init.sh --stepa-fcl extgen_requests_nuwro_bnb_run4c.fcl --nevents auto --nuwro-tarball &nuwro_tar; --nuwro-md5 &nuwro_md5; --tables &tables; --soft-fail</initscript>
 
     <!-- EXT file into the job, then steps A-D with N = its events -->
     <fcl>extgen_ext_copy.fcl
@@ -86,11 +87,11 @@
 
     <maxfilesperjob>1</maxfilesperjob>
     <numjobs>&numjobs;</numjobs>
-    <memory>5000</memory>   <!-- GiBUU reco1 test: peak RSS 3.49 GB (reco1a) -->
+    <memory>4000</memory>
     <disk>35GB</disk>
     <prestagefraction>0.99</prestagefraction>
     <datatier>reconstructed</datatier>
-    <jobsub>--expected-lifetime=12h -e IFDH_CP_UNLINK_ON_ERROR=1 --subgroup=prod --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.HAS_CVMFS_larsoft_opensciencegrid_org==true)' -f &extgen_dir;/&nuwro_tar;</jobsub>
+    <jobsub>--expected-lifetime=12h -e IFDH_CP_UNLINK_ON_ERROR=1 --subgroup=prod --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.HAS_CVMFS_larsoft_opensciencegrid_org==true)'</jobsub>
     <jobsub_start>--subgroup=prod --expected-lifetime=12h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
   </stage>
 
