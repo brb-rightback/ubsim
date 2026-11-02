@@ -1,0 +1,10 @@
+#
+# ExtGen overlay of a filtered sample (extgen_merge_*pi0*.fcl): as
+# extgen_overlay_SimInfoMixer.fcl, but each mixed event is charged the file's POT /
+# kept events, as the GENIE filtered overlays, instead of the POT of its own
+# subrun: all events of a filtered sample share one subrun, whose POT includes
+# the rejected events.
+
+#include "extgen_overlay_SimInfoMixer.fcl"
+
+physics.filters.generator.AuxHasSeparateGenG4: false

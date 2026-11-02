@@ -25,7 +25,7 @@ area.
 | Directory | What it holds |
 |---|---|
 | `GENIE/` | GENIE plugin library `ubsim_ExtGen_GENIE`: `genie::ubext::ExtGenPXSec` (total cross sections) and `genie::ubext::ExtGenInteractionListGenerator` (one CC and one NC interaction per initial state). GENIE finds them through their ROOT dictionary. |
-| `gxml/` | GENIE configuration, installed to `$UBSIM_DIR/gxml`: the tunes `GB25_05a_00_000` (GiBUU) and `NW25_11a_00_000` (NuWro), identical apart from their name, which ties a spline file to one generator (all tune files in `GB25_05a/` and `NW25_11a/`: a `_00_000` tune is "configuration only" to GENIE, which never reads a `GB25_05a_00_000/` subdirectory) plus overriding copies of GENIE's `master_config.xml` and `EventGenerator.xml`. **This directory must only be on `GXMLPATH` for ExtGen jobs, never on `FW_SEARCH_PATH`.** Regenerate the copies with `gxml/make_extgen_gxml.sh` when the GENIE version changes. |
+| `gxml/` | GENIE configuration, installed to `$UBSIM_DIR/gxml`: the tunes `GB25_05a_00_000` (GiBUU) and `NW25_11a_00_000` (NuWro), identical apart from their name, which ties a spline file to one generator (all tune files in `GB25_05a/` and `NW25_11a/`: a `_00_000` tune is "configuration only" to GENIE, which never reads a `GB25_05a_00_000/` subdirectory) plus overriding copies of GENIE's `master_config.xml`, `EventGenerator.xml` and `EventGeneratorListAssembler.xml`. **This directory must only be on `GXMLPATH` for ExtGen jobs, never on `FW_SEARCH_PATH`.** Regenerate the copies with `gxml/make_extgen_gxml.sh` when the GENIE version changes. |
 | `Modules/` | art modules: `ExtGenRequestDumper` (step B; writes `requests.txt`, checking each `MCTruth` against its `GTruth`), `ExtGenMerge` (step D), and for the GENIE closure test `ExtGenTruthServer`, `ExtGenClosureCheck` and `ExtGenMixCheck`. Library `ubsim_ExtGen_Modules` (`ExtGenIO`): request and served-event file formats and the generator-to-detector rotation. |
 | `tools/` | Offline scripts: `extgen_make_splines.py` (cross section table to GENIE spline XML), `extgen_placeholder_xsec.py` (fake cross sections for tests), `extgen_request_summary.py` (checks a request file and summarises targets, flavours, energies and vertices), `extgen_gibuu_scan_jobs.py` (job list of the GiBUU scan campaign), `extgen_gibuu_tables.py` (merges scans into the cross-section and Max tables), `extgen_gibuu_v3_compare.py` (V3), `extgen_gibuu_v4_summary.py` (V4 over a production; reads NuWro jobs' reports too) and `extgen_v5_compare.py` (V5, truth-level sample comparison after reco2); for NuWro `extgen_nuwro_scan_jobs.py` and `extgen_nuwro_tables.py`. |
 | `job/` | fcl files: `extgen_modules.fcl` (module prologs), `extgen_requests_test_bnb.fcl` (step A test), `extgen_dump_requests.fcl` (step B), `extgen_merge.fcl` (step D, also writes the per-event POT `potinevent:SubRunPOT`), `extgen_overlay_SimInfoMixer.fcl` (overlay on EXT, exact POT per mixed event), `extgen_closure_*.fcl` (GENIE closure test); step A of production: `extgen_requests_{bnb_run4c,bnb_run4a,numi_fhc,numi_rhc}.fcl` (GiBUU tune) and `extgen_requests_nuwro_*.fcl` (the same with the NuWro tune, `extgen_genie_nuwro.fcl`). |
@@ -199,6 +199,32 @@ NuMI templates have not been run yet.
 **reco2 job** (v10_04_07_26): the MCC10 reco2 workflow, with the standard
 `run_combinedrecotree_overlay.fcl` (ExtGen events have MCFlux and GTruth) and
 a `def_filetype` initsource script for the Wire-Cell FileType (in ubana).
+
+**Dedicated samples.** The options `--gen-flavors`, `--current` and `--top-volume` of `extgen_*_grid_init.sh` set step A for all
+beams, on top of the `--stepa-fcl` settings. Add them to the XML's `<initscript>`:
+
+| Sample | Options |
+|---|---|
+| Intrinsic nue (as the GENIE nue overlays) | `--gen-flavors 12,-12 --current CC --top-volume volTPCActive` |
+| nue, CC and NC | `--gen-flavors 12,-12 --top-volume volTPCActive` |
+| NC only, CC only | `--current NC`, `--current CC` |
+
+The cross-section tables do not change: they hold every channel. POT stays exact: GENIE's flux drivers count the POT of the rays they
+skip, and `--current` selects GENIE's generator list `ExtGenCC` or `ExtGenNC` (`gxml/EventGeneratorListAssembler.xml`).
+
+Ready-made step-A fcls: `extgen_requests_[nuwro_]{bnb_run4c,bnb_run4a,numi_fhc,numi_rhc}_{nue,ncpi0,ccpi0}.fcl`.
+
+| Sample | Step A | `<initscript>` additions | Mixer stage fcl |
+|---|---|---|---|
+| nue + nuebar CC | `..._nue.fcl` | none | `extgen_overlay_SimInfoMixer.fcl` |
+| NC pi0 | `..._ncpi0.fcl` | `--merge-fcl extgen_merge_ncpi0.fcl --oversample 13` | `extgen_overlay_SimInfoMixer_filtered.fcl` |
+| CC pi0, BNB | `..._ccpi0.fcl` | `--merge-fcl extgen_merge_ccpi0_bnb.fcl --oversample 17` | `extgen_overlay_SimInfoMixer_filtered.fcl` |
+| CC pi0, NuMI | `..._ccpi0.fcl` | `--merge-fcl extgen_merge_ccpi0_numi.fcl --oversample 13` | `extgen_overlay_SimInfoMixer_filtered.fcl` |
+
+Filtered samples use GENIE's POT scheme: step A has one subrun, whose POT includes the rejected events, and each mixed event is charged
+the file's POT / kept events. That is exact in total, an average per event. The `--oversample` values are estimates from the pi0 fractions in
+the validation samples, to keep at least as many events as a job has EXT events. EXT events left over are dropped; POT stays right either way.
+Filters on E_nu are not provided. All NuMI fcls use one interaction per event (`EventsPerSpill: 1`), not the fixed POT per spill of the GENIE overlays. BNB keeps `POTPerSpill: 5e12` from `microboone_genie_simple`, with GENIEGen repeating spills until one has an interaction.
 
 **Before submitting reco1:**
 1. Use a release whose uboonedata has the tables and the generator tarball:

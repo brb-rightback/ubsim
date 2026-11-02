@@ -1,0 +1,10 @@
+#
+# ExtGen step A, dedicated nue sample, BNB run 4c, NuWro: nue and nuebar CC only. One event per subrun as extgen_requests_nuwro_bnb_run4c.fcl, so the POT is exact
+# per event; use with extgen_overlay_SimInfoMixer.fcl and no filter. The POT of the skipped flavours is
+# counted by GENIE's flux driver.
+
+#include "extgen_requests_nuwro_bnb_run4c.fcl"
+
+physics.producers.generator.GenFlavors:         [ 12, -12 ]
+physics.producers.generator.EventGeneratorList: "ExtGenCC"
+physics.producers.generator.TopVolume:          "volTPCActive"

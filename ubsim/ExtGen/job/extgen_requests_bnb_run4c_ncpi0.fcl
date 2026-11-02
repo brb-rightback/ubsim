@@ -1,0 +1,9 @@
+#
+# ExtGen step A, dedicated ncpi0 sample, BNB run 4c, GiBUU: NC interactions for a NC pi0 sample, filtered after the merge (extgen_merge_ncpi0.fcl). One subrun for the
+# whole job, so that its POT includes the rejected events.
+
+#include "extgen_requests_bnb_run4c.fcl"
+
+physics.producers.generator.EventGeneratorList: "ExtGenNC"
+physics.producers.generator.TopVolume:          "volTPCActive"
+source.numberEventsInSubRun: 100000000

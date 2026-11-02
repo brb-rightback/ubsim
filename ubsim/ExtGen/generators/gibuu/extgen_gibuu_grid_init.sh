@@ -32,6 +32,8 @@
 #       (--tables STEM | --spline XML [--xsec-table TXT] (--max-table TXT | --flat-max MAX))
 #       [--margin 3] [--floor 50] [--ensembles 1000] [--retries 2]
 #       [--warn-pull 4] [--fail-pull 8] [--allow-missing-xsec] [--allow-build-mismatch]
+#       [--gen-flavors LIST] [--current CC|NC] [--top-volume VOL]
+#       [--merge-fcl FCL --oversample F]
 #       [--seeds GENIE,MERGE,GIBUU] [--soft-fail]
 #
 #   FCL        step-A fcl, e.g. extgen_requests_bnb_run4c.fcl
@@ -49,6 +51,17 @@
 #   --flat-max MAX: one Max for every request instead of the Max table (tests)
 #   Files: a relative path is looked up along FW_SEARCH_PATH (uboonedata);
 #   /pnfs paths are copied with ifdh.
+#   --gen-flavors, --current, --top-volume: dedicated samples, set in step A
+#              over the --stepa-fcl settings. LIST is comma separated PDG codes
+#              (e.g. 12,-12 for an intrinsic nue sample; GENIE counts the POT of
+#              the rays it skips). --current uses the generator list ExtGenCC or
+#              ExtGenNC. VOL e.g. volTPCActive, as the GENIE nue overlays.
+#              The cross-section tables hold every channel, so they do not change.
+#   --merge-fcl, --oversample: filtered samples. FCL (extgen_merge_*pi0*.fcl) replaces
+#              extgen_merge.fcl in step D and drops events; with --nevents auto,
+#              N = F x the EXT events, so that about enough events survive. The
+#              stage fcl must then be extgen_overlay_SimInfoMixer_filtered.fcl,
+#              and step A one subrun for the job (extgen_requests_*_{nc,cc}pi0.fcl).
 #   --seeds    reuse the seeds of an earlier job (from its extgen_job_summary.txt);
 #              by default each job draws its seeds from /dev/urandom
 #   --soft-fail exit 0 after a failure (see above); for the <initscript>
@@ -138,6 +151,7 @@ lar_events() {  # number of events lar processed, from its log
 STEPA= NEV= TARBALL= MD5= STEM= SPLINE= XSEC= MAXTAB= FLAT=
 MARGIN=3 FLOOR=50 ENS=1000 RETRIES=2 WARN=4 FAILPULL=8
 ALLOW_MISSING=0 ALLOW_MISMATCH=0 SEEDS= CONTINUE=0 SOFT=0
+GENFLAVORS= CURRENT= TOPVOL= MERGE_FCL=extgen_merge.fcl OVERSAMPLE=1 NEXT=0
 while [ $# -gt 0 ]; do
   case $1 in
     --continue) CONTINUE=1; shift ;;
@@ -160,6 +174,11 @@ while [ $# -gt 0 ]; do
     --allow-missing-xsec) ALLOW_MISSING=1; shift ;;
     --allow-build-mismatch) ALLOW_MISMATCH=1; shift ;;
     --seeds) SEEDS=$2; shift 2 ;;
+    --gen-flavors) GENFLAVORS=$2; shift 2 ;;
+    --current) CURRENT=$2; shift 2 ;;
+    --top-volume) TOPVOL=$2; shift 2 ;;
+    --merge-fcl) MERGE_FCL=$2; shift 2 ;;
+    --oversample) OVERSAMPLE=$2; shift 2 ;;
     *) echo "extgen_gibuu_grid_init.sh: bad option $1 (see the header of this script)" >&2; exit 1 ;;
   esac
 done
@@ -174,6 +193,9 @@ mkdir -p "$WORK"
 } > "$SUMMARY"
 
 [ -n "$STEPA" ] || fail "--stepa-fcl missing"
+[ -z "$CURRENT" ] || [ "$CURRENT" = CC ] || [ "$CURRENT" = NC ] || fail "--current must be CC or NC"
+[[ "$OVERSAMPLE" =~ ^[1-9][0-9]*$ ]] || fail "--oversample must be a positive integer"
+[[ "$GENFLAVORS" =~ ^(-?[0-9]+(,-?[0-9]+)*)?$ ]] || fail "--gen-flavors must be a comma separated list of PDG codes"
 [ "$NEV" = auto ] || { [[ "$NEV" =~ ^[0-9]+$ ]] && [ "$NEV" -gt 0 ]; } \
   || fail "--nevents must be a positive integer or auto"
 [ -n "$TARBALL" ] && [ -n "$MD5" ] || fail "--gibuu-tarball and --gibuu-md5 are required"
@@ -265,7 +287,7 @@ done
 if [ "$NEV" = auto ]; then
   # the rest runs from the copy stage's <endscript> (--continue)
   declare -p STEPA SPLINE_F XSEC_F MAXOPT ENS RETRIES WARN FAILPULL ALLOW_MISSING \
-             SEED_GENIE SEED_MERGE SEED_GIBUU > "$WORK/job.env"
+             SEED_GENIE SEED_MERGE SEED_GIBUU GENFLAVORS CURRENT TOPVOL MERGE_FCL OVERSAMPLE > "$WORK/job.env"
   note "nevents auto (counted after the EXT copy stage)"
   log "setup done; steps A-D follow the EXT copy stage ($(date -u))"
   exit 0
@@ -295,6 +317,9 @@ else  # --continue
       fi
     done
   fi
+  NEXT=$NEV
+  NEV=$(( NEXT * OVERSAMPLE ))
+  [ "$OVERSAMPLE" -eq 1 ] || note "oversample $OVERSAMPLE: $NEV generator events for $NEXT EXT events"
 fi
 
 cd "$WORK" || fail "no $WORK"
@@ -306,6 +331,10 @@ physics.producers.generator.RandomSeed: $SEED_GENIE
 physics.producers.generator.XSecTable:  "$SPLINE_F"
 services.scheduler.wantSummary: true   # event count for the check below
 EOF
+[ -z "$GENFLAVORS" ] || echo "physics.producers.generator.GenFlavors: [$GENFLAVORS]" >> stepA.fcl
+[ -z "$CURRENT" ] || echo "physics.producers.generator.EventGeneratorList: \"ExtGen$CURRENT\"" >> stepA.fcl
+[ -z "$TOPVOL" ] || echo "physics.producers.generator.TopVolume: \"$TOPVOL\"" >> stepA.fcl
+[ -z "$GENFLAVORS$CURRENT$TOPVOL" ] || note "dedicated sample: flavors ${GENFLAVORS:-all} current ${CURRENT:-all} top volume ${TOPVOL:-from the fcl}"
 note "stepA $STEPA nevents $NEV"
 log "step A: lar -c $STEPA -n $NEV ($(date -u))"
 lar -c stepA.fcl -n "$NEV" -o stepA.root > stepA.log 2>&1 || fail "step A failed (stepA.log)"
@@ -318,7 +347,8 @@ lar -c extgen_dump_requests.fcl -s stepA.root > dump.log 2>&1 || fail "step B fa
 [ -f requests.txt ] || fail "no requests.txt"
 NREQ=$(awk '!/^#/ && NF == 16' requests.txt | wc -l)
 nsub=$(awk '!/^#/ && NF == 16 { print $2, $3 }' requests.txt | sort -u | wc -l)
-[ "$nsub" -eq "$NEV" ] || fail "requests cover $nsub subruns, not $NEV"
+# a filtered sample has one subrun; else one event per subrun
+[ "$MERGE_FCL" != extgen_merge.fcl ] || [ "$nsub" -eq "$NEV" ] || fail "requests cover $nsub subruns, not $NEV"
 note "requests $NREQ"
 
 # --- C: GiBUU, then the cross-section check
@@ -343,14 +373,23 @@ fi
 
 # --- D: merge
 cat > merge.fcl <<EOF
-#include "extgen_merge.fcl"
+#include "$MERGE_FCL"
 physics.producers.generator.Seed: $SEED_MERGE
 services.scheduler.wantSummary: true
 EOF
 log "step D: merge ($(date -u))"
 lar -c merge.fcl -s stepA.root -o merged.root > merge.log 2>&1 || fail "step D failed (merge.log)"
 n=$(lar_events merge.log)
-[ "$n" -eq "$NEV" ] || fail "merge wrote $n events, not $NEV"
+[ "$n" -eq "$NEV" ] || fail "merge read $n events, not $NEV"
+if [ "$MERGE_FCL" = extgen_merge.fcl ]; then
+  KEPT=$NEV
+else
+  KEPT=$(awk '/TrigReport Events total =/ { k = $8 } END { print k + 0 }' merge.log)
+  [ "$KEPT" -gt 0 ] || fail "the filter of $MERGE_FCL kept no events"
+  note "filter $MERGE_FCL kept $KEPT of $NEV events"
+  [ "$NEXT" -eq 0 ] || [ "$KEPT" -ge "$NEXT" ] \
+    || note "warning: $KEPT events kept for $NEXT EXT events: the rest of the EXT events are dropped"
+fi
 mv merged.root "$TOP/genfile.root.local" || fail "cannot move the merged file"
 rm -f stepA.root
 
@@ -358,5 +397,5 @@ cd "$TOP"
 save_logs
 note "status OK"
 note "end $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-log "done: genfile.root.local with $NEV events ($(date -u))"
+log "done: genfile.root.local with $KEPT events ($(date -u))"
 exit 0

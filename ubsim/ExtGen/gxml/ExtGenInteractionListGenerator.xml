@@ -3,11 +3,20 @@
 <!--
 Configuration sets for genie::ubext::ExtGenInteractionListGenerator (ubsim/ExtGen)
 
-One CC and one NC interaction per (neutrino, target) initial state. No
-configurable parameters.
+One CC and/or one NC interaction per (neutrino, target) initial state.
+
+Parameters: is-CC, is-NC (bool, default true).
 -->
 
 <alg_conf>
   <param_set name="Default">
+  </param_set>
+
+  <param_set name="CC">
+    <param type="bool" name="is-NC"> false </param>
+  </param_set>
+
+  <param_set name="NC">
+    <param type="bool" name="is-CC"> false </param>
   </param_set>
 </alg_conf>

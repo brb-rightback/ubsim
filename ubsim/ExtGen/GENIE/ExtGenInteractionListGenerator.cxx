@@ -43,6 +43,8 @@ InteractionList* ExtGenInteractionListGenerator::CreateInteractionList(
   InteractionList* intlist = new InteractionList;
 
   for (InteractionType_t type : {kIntWeakCC, kIntWeakNC}) {
+    if ((type == kIntWeakCC && !fIsCC) || (type == kIntWeakNC && !fIsNC)) continue;
+
     Interaction* interaction = new Interaction(init, ProcessInfo(kScNull, type));
     if (interaction->InitState().Tgt().IsFreeNucleon()) {
       interaction->InitStatePtr()->TgtPtr()->SetHitNucPdg(
@@ -68,11 +70,19 @@ InteractionList* ExtGenInteractionListGenerator::CreateInteractionList(
 void ExtGenInteractionListGenerator::Configure(const Registry& config)
 {
   Algorithm::Configure(config);
+  this->LoadConfigData();
 }
 //____________________________________________________________________________
 void ExtGenInteractionListGenerator::Configure(std::string config)
 {
   Algorithm::Configure(config);
+  this->LoadConfigData();
+}
+//____________________________________________________________________________
+void ExtGenInteractionListGenerator::LoadConfigData()
+{
+  GetParamDef("is-CC", fIsCC, true);
+  GetParamDef("is-NC", fIsNC, true);
 }
 
 } // namespace ubext

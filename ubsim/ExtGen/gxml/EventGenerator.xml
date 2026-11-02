@@ -636,4 +636,20 @@ XSecModel                   alg     Yes  Cross section model used at the thread 
      <param type="alg"    name="ILstGen">    genie::ubext::ExtGenInteractionListGenerator/Default   </param>
   </param_set>
 
+  <param_set name="ExtGenRequestCC">
+     <param type="string" name="VldContext"> </param>
+     <param type="int"    name="NModules">   2                                                      </param>
+     <param type="alg"    name="Module-0">   genie::InitialStateAppender/Default                    </param>
+     <param type="alg"    name="Module-1">   genie::VertexGenerator/Default                         </param>
+     <param type="alg"    name="ILstGen">    genie::ubext::ExtGenInteractionListGenerator/CC        </param>
+  </param_set>
+
+  <param_set name="ExtGenRequestNC">
+     <param type="string" name="VldContext"> </param>
+     <param type="int"    name="NModules">   2                                                      </param>
+     <param type="alg"    name="Module-0">   genie::InitialStateAppender/Default                    </param>
+     <param type="alg"    name="Module-1">   genie::VertexGenerator/Default                         </param>
+     <param type="alg"    name="ILstGen">    genie::ubext::ExtGenInteractionListGenerator/NC        </param>
+  </param_set>
+
 </alg_conf>

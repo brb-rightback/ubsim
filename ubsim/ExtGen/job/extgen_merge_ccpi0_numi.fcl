@@ -1,0 +1,28 @@
+#
+# ExtGen step D of a filtered sample: extgen_merge.fcl, keeping only events with
+# exactly one pi0, from any CC neutrino of the generator list ExtGenCC among the status-1 particles of the merged MCTruth
+# (the pi0 condition of prodgenie_numi_nu_filtered_CCNCPiZero_{fhc,rhc}.fcl, which do not
+# separate CC from NC; no lepton is asked for, so that RHC keeps its mu+ events).
+#
+# POT: step A of a filtered sample has one subrun, whose POT includes the rejected
+# events, and potinevent copies it into every kept event. Use with
+# extgen_overlay_SimInfoMixer_filtered.fcl, which charges each mixed event the
+# file's POT / kept events, as the GENIE filtered overlays.
+#
+# With extgen_*_grid_init.sh --merge-fcl <this file> --oversample F.
+
+#include "filters.fcl"
+#include "extgen_merge.fcl"
+
+services.TFileService: { fileName: "extgen_merge_hist.root" }
+
+physics.filters.finalstate: @local::microboone_finalstateselectfilter
+physics.filters.finalstate.IsVerbose:           false
+physics.filters.finalstate.GenieModuleLabel:    "generator"
+physics.filters.finalstate.isInclusive:         true
+physics.filters.finalstate.PDG:                 [ 111 ]
+physics.filters.finalstate.PDGCount:            [ 1 ]
+physics.filters.finalstate.PDGCountExclusivity: [ true ]
+
+physics.merge:         [ rns, generator, potinevent, finalstate ]
+outputs.out1.SelectEvents: [ merge ]

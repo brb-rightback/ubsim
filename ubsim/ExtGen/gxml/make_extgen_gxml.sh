@@ -8,7 +8,8 @@
 #
 # Generated files (do not edit by hand):
 #   master_config.xml                    + ExtGen algorithm -> file entries
-#   EventGenerator.xml                   + "ExtGenRequest" generation chain
+#   EventGenerator.xml                   + "ExtGenRequest", "ExtGenRequestCC", "ExtGenRequestNC" chains
+#   EventGeneratorListAssembler.xml      + generator lists "ExtGenCC", "ExtGenNC"
 #   <tune>/ModelConfiguration.xml        G18_10a copy + XSecModel for ExtGenRequest
 #   <tune>/CommonParam.xml               G18_10a_02_11a copy + "ExtGen" param set
 # for each ExtGen tune: GB25_05a (GiBUU 2025), NW25_11a (NuWro 25.11). The
@@ -36,7 +37,7 @@ SRC_CMC=G18_10a
 SRC_TUNE=G18_10a_02_11a
 TUNE_DIRS="GB25_05a NW25_11a"
 
-for f in master_config.xml EventGenerator.xml \
+for f in master_config.xml EventGenerator.xml EventGeneratorListAssembler.xml \
          $SRC_CMC/ModelConfiguration.xml $SRC_CMC/$SRC_TUNE/CommonParam.xml; do
   [ -f "$GCONF/$f" ] || { echo "ERROR: $GCONF/$f not found" >&2; exit 1; }
 done
@@ -88,14 +89,51 @@ cat > $tmp/evgen.ins <<'XML'
      <param type="alg"    name="ILstGen">    genie::ubext::ExtGenInteractionListGenerator/Default   </param>
   </param_set>
 
+  <param_set name="ExtGenRequestCC">
+     <param type="string" name="VldContext"> </param>
+     <param type="int"    name="NModules">   2                                                      </param>
+     <param type="alg"    name="Module-0">   genie::InitialStateAppender/Default                    </param>
+     <param type="alg"    name="Module-1">   genie::VertexGenerator/Default                         </param>
+     <param type="alg"    name="ILstGen">    genie::ubext::ExtGenInteractionListGenerator/CC        </param>
+  </param_set>
+
+  <param_set name="ExtGenRequestNC">
+     <param type="string" name="VldContext"> </param>
+     <param type="int"    name="NModules">   2                                                      </param>
+     <param type="alg"    name="Module-0">   genie::InitialStateAppender/Default                    </param>
+     <param type="alg"    name="Module-1">   genie::VertexGenerator/Default                         </param>
+     <param type="alg"    name="ILstGen">    genie::ubext::ExtGenInteractionListGenerator/NC        </param>
+  </param_set>
+
 XML
 insert $GCONF/EventGenerator.xml '^</alg_conf>' $tmp/evgen.ins \
   | header "$GCONF/EventGenerator.xml" > $OUT/EventGenerator.xml
 
+# --- EventGeneratorListAssembler.xml: EventGeneratorList "ExtGenCC" or "ExtGenNC"
+# in GENIEGen; the "Default" list is the tune's TuneGeneratorList.xml
+cat > $tmp/evlist.ins <<'XML'
+
+  <!-- ExtGen (ubsim/ExtGen): one current only -->
+  <param_set name="ExtGenCC">
+     <param type="int" name="NGenerators">   1                                     </param>
+     <param type="alg" name="Generator-0">   genie::EventGenerator/ExtGenRequestCC </param>
+  </param_set>
+
+  <param_set name="ExtGenNC">
+     <param type="int" name="NGenerators">   1                                     </param>
+     <param type="alg" name="Generator-0">   genie::EventGenerator/ExtGenRequestNC </param>
+  </param_set>
+
+XML
+insert $GCONF/EventGeneratorListAssembler.xml '^</alg_conf>' $tmp/evlist.ins \
+  | header "$GCONF/EventGeneratorListAssembler.xml" > $OUT/EventGeneratorListAssembler.xml
+
 # --- tunes: ModelConfiguration.xml
 cat > $tmp/model.ins <<'XML'
   <!-- ExtGen: total cross sections of the external generator (ubsim/ExtGen) -->
-  <param type="alg" name="XSecModel@genie::EventGenerator/ExtGenRequest"> genie::ubext::ExtGenPXSec/Default </param>
+  <param type="alg" name="XSecModel@genie::EventGenerator/ExtGenRequest">   genie::ubext::ExtGenPXSec/Default </param>
+  <param type="alg" name="XSecModel@genie::EventGenerator/ExtGenRequestCC"> genie::ubext::ExtGenPXSec/Default </param>
+  <param type="alg" name="XSecModel@genie::EventGenerator/ExtGenRequestNC"> genie::ubext::ExtGenPXSec/Default </param>
 XML
 # --- tunes: CommonParam.xml
 cat > $tmp/common.ins <<'XML'

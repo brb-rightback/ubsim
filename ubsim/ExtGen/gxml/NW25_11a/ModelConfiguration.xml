@@ -18,7 +18,9 @@ STFC, Rutherford Appleton Laboratory
 
  <param_set name="Default">
   <!-- ExtGen: total cross sections of the external generator (ubsim/ExtGen) -->
-  <param type="alg" name="XSecModel@genie::EventGenerator/ExtGenRequest"> genie::ubext::ExtGenPXSec/Default </param>
+  <param type="alg" name="XSecModel@genie::EventGenerator/ExtGenRequest">   genie::ubext::ExtGenPXSec/Default </param>
+  <param type="alg" name="XSecModel@genie::EventGenerator/ExtGenRequestCC"> genie::ubext::ExtGenPXSec/Default </param>
+  <param type="alg" name="XSecModel@genie::EventGenerator/ExtGenRequestNC"> genie::ubext::ExtGenPXSec/Default </param>
 
 
  <!--

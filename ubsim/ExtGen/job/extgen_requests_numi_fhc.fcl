@@ -1,7 +1,10 @@
 #
 # ExtGen production step A, NuMI FHC: extgen_requests_bnb_run4c.fcl with the
 # generator settings of standard_overlay_gen_numi_griddriver_fhc.fcl (dk2nu
-# flux, microboone-numi-v2 location, NuMI spill timing and POT per spill).
+# flux, microboone-numi-v2 location, NuMI spill timing), except the spill size:
+# one interaction per event, as the BNB fcls, not that fcl's fixed POT per spill.
+# A request needs an interaction, and with POT per spill most spills have none.
+# GENIE counts the POT of every ray it throws, so each event's POT stays exact.
 # The GiBUU cross sections end at the 8 GeV cap (plan section 7): neutrinos
 # above it never interact, so the sample covers E < 8 GeV with correct POT.
 # The process name stays ExtGenRequests (read by name in extgen_merge.fcl).
@@ -9,8 +12,8 @@
 #include "extgen_requests_bnb_run4c.fcl"
 
 physics.producers.generator:                  @local::standard_genie
-physics.producers.generator.POTPerSpill:      5e13
-physics.producers.generator.EventsPerSpill:   0
+physics.producers.generator.POTPerSpill:      0
+physics.producers.generator.EventsPerSpill:   1
 physics.producers.generator.GlobalTimeOffset: 5627.5
 physics.producers.generator.RandomTimeOffset: 9600.
 physics.producers.generator.TopVolume:        "volCryostat"

@@ -1,0 +1,10 @@
+#
+# ExtGen step A, dedicated nue sample, NuMI FHC, GiBUU: nue and nuebar CC only. One event per subrun as extgen_requests_numi_fhc.fcl, so the POT is exact
+# per event; use with extgen_overlay_SimInfoMixer.fcl and no filter. The POT of the skipped flavours is
+# counted by GENIE's flux driver.
+
+#include "extgen_requests_numi_fhc.fcl"
+
+physics.producers.generator.GenFlavors:         [ 12, -12 ]
+physics.producers.generator.EventGeneratorList: "ExtGenCC"
+physics.producers.generator.TopVolume:          "volTPCActive"
