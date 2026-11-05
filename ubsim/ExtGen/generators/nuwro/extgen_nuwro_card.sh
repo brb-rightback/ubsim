@@ -18,11 +18,12 @@
 #     local Fermi gas with NuWro's library values (binding energy from the
 #     isotope table, kF from the density profile: nucleus_kf = 0, as NuWro's
 #     own detector mode does);
-#   * QEL spectral function (sf_method = 1, as the card) for C12, O16, Ar40 and
-#     Fe56, the only nuclei NuWro has it for; local Fermi gas QEL
-#     (sf_method = 0) for every other nucleus and the free nucleons
-#     (nuwro_extgen refuses sf_method > 0 elsewhere: sfevent would give weight
-#     0 without a warning);
+#   * QEL: local Fermi gas (sf_method = 0) for every nucleus, where the card
+#     has the spectral function (sf_method = 1). The NuWro spectral function
+#     behaves oddly: against LFG it gives about 14% less Ar40 QEL on the BNB
+#     flux, yet less FSI (fewer knocked-out neutrons, a smaller delta-pT tail)
+#     (nuwroval/sf_vs_lfg, 2026-11-03). Up to card 595c318a, C12, O16, Ar40
+#     and Fe56 used sf_method = 1;
 #   * channels: all of the group's current (CC: QEL, RES, DIS, COH, MEC, HYP;
 #     NC: QEL, RES, DIS, COH, MEC); neutrino-electron scattering off. HYP is
 #     on for neutrinos too (zero cross section: never generated);
@@ -69,11 +70,6 @@ case "$CUR" in
   CC) C=1; NCF=0; MECKIND=6; MECNAME="2020 Valencia"; SPP=2000 ;;
   NC) C=0; NCF=1; MECKIND=1; MECNAME="TEM: NuWro's only NC MEC model"; SPP=8000 ;;
   *) die "current must be CC or NC" ;;
-esac
-
-case "$Z:$N" in
-  6:6|8:8|18:22|26:30) SF=1 ;;
-  *) SF=0 ;;
 esac
 
 cat <<EOF
@@ -147,8 +143,9 @@ flux_correction   = 0
 cc_smoothing      = 0
 qel_rpa           = 1
 
-# Spectral function (C12, O16, Ar40, Fe56 only; local Fermi gas elsewhere)
-sf_method                 = $SF
+# Spectral function: off (local Fermi gas QEL, nucleus_target = 2); the sf_*
+# settings below have no effect with sf_method = 0
+sf_method                 = 0
 sf_transparency_table_idx = 1
 sf_transparency_scale     = 1
 sf_recoil                 = 1

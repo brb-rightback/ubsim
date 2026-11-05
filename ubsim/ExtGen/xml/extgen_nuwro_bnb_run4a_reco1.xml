@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 
 <!-- Production template: edit the entities marked SET_ME.
-     NuWro build 32065e3 with card 595c318a (NC TEM MEC, NC spp_precision 8000) and tables
-     nuwro_25_11_1_595c318a in uboonedata.
+     NuWro build 32065e3 with card 0fefd586 (QEL local Fermi gas for every nucleus, NC TEM MEC,
+     NC spp_precision 8000) and tables nuwro_25_11_1_0fefd586 in uboonedata.
 
      ExtGen NuWro overlay, BNB run 4a: production through reco1.
      The NuWro counterpart of extgen_gibuu_bnb_run4c_reco1.xml; only the
@@ -39,9 +39,9 @@
 <!ENTITY user         ""> <!-- SET_ME -->
 <!ENTITY name         "">  <!-- SET_ME -->
 <!ENTITY ext_samdef   "">  <!-- SET_ME -->
-<!ENTITY nuwro_tar    "genie/nuwro/nuwro_25_11_1_595c318a.tar.gz">  <!-- in uboonedata -->
-<!ENTITY nuwro_md5    "4da72f88e63a67f8100c50251c38a334">  <!-- md5sum of the tarball (build 32065e3, card 595c318a) -->
-<!ENTITY tables       "genie/nuwro/nuwro_25_11_1_595c318a">  <!-- scan campaign 4 -->
+<!ENTITY nuwro_tar    "genie/nuwro/nuwro_25_11_1_0fefd586.tar.gz">  <!-- in uboonedata -->
+<!ENTITY nuwro_md5    "d6cae3ca1ab0c99fb7a3fb99d427a29c">  <!-- md5sum of the tarball (build 32065e3, card 0fefd586) -->
+<!ENTITY tables       "genie/nuwro/nuwro_25_11_1_0fefd586">  <!-- scan campaign 5 -->
 <!ENTITY numjobs      "">   <!-- SET_ME -->
 ]>
 
