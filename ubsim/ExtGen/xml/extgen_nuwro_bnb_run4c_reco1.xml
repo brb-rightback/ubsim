@@ -26,8 +26,10 @@
 
      Before submitting:
        * set the SET_ME entities: numjobs is one job per EXT file;
-       * release must be a uboonecode release whose uboonedata has the tables and
-         the NuWro tarball named in nuwro_tar (found along FW_SEARCH_PATH).
+       * release must be a uboonecode release whose uboonedata has the tables;
+       * copy the NuWro tarball nuwro_tar from /pnfs/uboone/persistent/users/uboonepro/ExtGen
+         (the stored copy: too large for uboonedata) to your resilient directory extgen_dir;
+         jobsub -f takes it from there and the job checks its md5.
      Every job keeps its seeds, requests, served events and the in-job cross
      section check (V4) in its log tarball.
 -->
@@ -38,7 +40,8 @@
 <!ENTITY user         ""> <!-- SET_ME -->
 <!ENTITY name         "">  <!-- SET_ME -->
 <!ENTITY ext_samdef   "">  <!-- SET_ME -->
-<!ENTITY nuwro_tar    "genie/nuwro/nuwro_25_11_1_0fefd586.tar.gz">  <!-- in uboonedata -->
+<!ENTITY extgen_dir   "">  <!-- SET_ME: resilient directory with a copy of the tarball, e.g. /pnfs/uboone/resilient/users/USER/extgen -->
+<!ENTITY nuwro_tar    "nuwro_25_11_1_0fefd586.tar.gz">  <!-- stored in /pnfs/uboone/persistent/users/uboonepro/ExtGen -->
 <!ENTITY nuwro_md5    "d6cae3ca1ab0c99fb7a3fb99d427a29c">  <!-- md5sum of the tarball (build 32065e3, card 0fefd586) -->
 <!ENTITY tables       "genie/nuwro/nuwro_25_11_1_0fefd586">  <!-- scan campaign 5 -->
 <!ENTITY numjobs      "">   <!-- SET_ME -->
@@ -65,8 +68,8 @@
 
     <inputdef>&ext_samdef;</inputdef>
 
-    <!-- setup for steps A-D; the tarball and tables are read from uboonedata -->
-    <initscript>extgen_nuwro_grid_init.sh --stepa-fcl extgen_requests_nuwro_bnb.fcl --nevents auto --nuwro-tarball &nuwro_tar; --nuwro-md5 &nuwro_md5; --tables &tables; --soft-fail</initscript>
+    <!-- setup for steps A-D; the tables are read from uboonedata, the tarball comes with jobsub -f -->
+    <initscript>extgen_nuwro_grid_init.sh --stepa-fcl extgen_requests_nuwro_bnb.fcl --nevents auto --nuwro-tarball &extgen_dir;/&nuwro_tar; --nuwro-md5 &nuwro_md5; --tables &tables; --soft-fail</initscript>
 
     <!-- EXT file into the job, then steps A-D with N = its events -->
     <fcl>extgen_ext_copy.fcl
@@ -91,7 +94,7 @@
     <disk>35GB</disk>
     <prestagefraction>0.99</prestagefraction>
     <datatier>reconstructed</datatier>
-    <jobsub>--expected-lifetime=12h -e IFDH_CP_UNLINK_ON_ERROR=1 --subgroup=prod --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.HAS_CVMFS_larsoft_opensciencegrid_org==true)'</jobsub>
+    <jobsub>--expected-lifetime=12h -e IFDH_CP_UNLINK_ON_ERROR=1 --subgroup=prod --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)&amp;&amp;(TARGET.HAS_CVMFS_larsoft_opensciencegrid_org==true)' -f &extgen_dir;/&nuwro_tar;</jobsub>
     <jobsub_start>--subgroup=prod --expected-lifetime=12h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
   </stage>
 

@@ -25,8 +25,10 @@
 
      Before submitting:
        * set the SET_ME entities: numjobs is one job per EXT file;
-       * release must be a uboonecode release whose uboonedata has the tables and
-         the GiBUU tarball named in gibuu_tar (found along FW_SEARCH_PATH).
+       * release must be a uboonecode release whose uboonedata has the tables;
+       * copy the GiBUU tarball gibuu_tar from /pnfs/uboone/persistent/users/uboonepro/ExtGen
+         (the stored copy: too large for uboonedata) to your resilient directory extgen_dir;
+         jobsub -f takes it from there and the job checks its md5.
      Every job keeps its seeds, requests, served events and the in-job cross
      section check (V4) in its log tarball; summarise V4 over the production
      with extgen_gibuu_v4_summary.py.
@@ -38,7 +40,8 @@
 <!ENTITY user         ""> <!-- SET_ME -->
 <!ENTITY name         "">  <!-- SET_ME -->
 <!ENTITY ext_samdef   "">  <!-- SET_ME -->
-<!ENTITY gibuu_tar    "genie/gibuu/gibuu_2025p5_8cfc370.tar.gz">  <!-- in uboonedata -->
+<!ENTITY extgen_dir   "">  <!-- SET_ME: resilient directory with a copy of the tarball, e.g. /pnfs/uboone/resilient/users/USER/extgen -->
+<!ENTITY gibuu_tar    "gibuu_2025p5_8cfc370.tar.gz">  <!-- stored in /pnfs/uboone/persistent/users/uboonepro/ExtGen -->
 <!ENTITY gibuu_md5    "a6850ad78fb521f701fc87c14235abc2">  <!-- md5sum of the tarball (8cfc370, card 25a5f19f) -->
 <!ENTITY tables       "genie/gibuu/gibuu_2025p5_516d3a20">
 <!ENTITY numjobs      "">   <!-- SET_ME -->
@@ -65,8 +68,8 @@
 
     <inputdef>&ext_samdef;</inputdef>
 
-    <!-- setup for steps A-D; the tarball and tables are read from uboonedata -->
-    <initscript>extgen_gibuu_grid_init.sh --stepa-fcl extgen_requests_numi_rhc.fcl --nevents auto --gibuu-tarball &gibuu_tar; --gibuu-md5 &gibuu_md5; --tables &tables; --allow-build-mismatch --soft-fail</initscript>
+    <!-- setup for steps A-D; the tables are read from uboonedata, the tarball comes with jobsub -f -->
+    <initscript>extgen_gibuu_grid_init.sh --stepa-fcl extgen_requests_numi_rhc.fcl --nevents auto --gibuu-tarball &extgen_dir;/&gibuu_tar; --gibuu-md5 &gibuu_md5; --tables &tables; --allow-build-mismatch --soft-fail</initscript>
 
     <!-- EXT file into the job, then steps A-D with N = its events -->
     <fcl>extgen_ext_copy.fcl
@@ -91,7 +94,7 @@
     <disk>35GB</disk>
     <prestagefraction>0.99</prestagefraction>
     <datatier>reconstructed</datatier>
-    <jobsub>--expected-lifetime=12h -e IFDH_CP_UNLINK_ON_ERROR=1 --subgroup=prod --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)'</jobsub>
+    <jobsub>--expected-lifetime=12h -e IFDH_CP_UNLINK_ON_ERROR=1 --subgroup=prod --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)&amp;&amp;(TARGET.HAS_CVMFS_uboone_osgstorage_org==true)' -f &extgen_dir;/&gibuu_tar;</jobsub>
     <jobsub_start>--subgroup=prod --expected-lifetime=12h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
   </stage>
 

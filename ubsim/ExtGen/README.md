@@ -227,14 +227,16 @@ the validation samples, to keep at least as many events as a job has EXT events.
 Filters on E_nu are not provided. All NuMI fcls use one interaction per event (`EventsPerSpill: 1`), not the fixed POT per spill of the GENIE overlays. BNB keeps `POTPerSpill: 5e12` from `microboone_genie_simple`, with GENIEGen repeating spills until one has an interaction.
 
 **Before submitting reco1:**
-1. Use a release whose uboonedata has the tables and the generator tarball:
-   `genie/gibuu/gibuu_<version>_<commit7>.tar.gz` (`make_gibuu_tarball.sh`) or
-   `genie/nuwro/nuwro_<version>_<cardhash>.tar.gz` (`make_nuwro_tarball.sh`).
-   The jobs find both along FW_SEARCH_PATH and check the tarball's md5.
-2. In the XML: the `SET_ME` entities `user`, `name`, `ext_samdef`, `numjobs`, and
-   `release`. After a new generator build or card also the tarball name, its md5
-   and `tables`.
-3. `project.py --xml <xml> --stage reco1 --submit`.
+1. Use a release whose uboonedata has the tables (`genie/gibuu/`, `genie/nuwro/`).
+2. Copy the generator tarball to your resilient area: the tarballs are too large for
+   uboonedata and are stored in `/pnfs/uboone/persistent/users/uboonepro/ExtGen/`
+   (`gibuu_<version>_<commit7>.tar.gz` from `make_gibuu_tarball.sh`,
+   `nuwro_<version>_<cardhash>.tar.gz` from `make_nuwro_tarball.sh`; current names and md5s in
+   the uboonedata READMEs). The XML passes it with jobsub -f; the job checks its md5.
+3. In the XML: the `SET_ME` entities `user`, `name`, `ext_samdef`, `numjobs`, `extgen_dir`
+   (the resilient directory of step 2), and `release`. After a new generator build or card
+   also the tarball name, its md5 and `tables`.
+4. `project.py --xml <xml> --stage reco1 --submit`.
 
 **Per job** (in the job's `log.tar`):
 
