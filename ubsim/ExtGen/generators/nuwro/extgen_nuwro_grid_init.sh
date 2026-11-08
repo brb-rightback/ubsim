@@ -43,7 +43,7 @@
 #       [--merge-fcl FCL --oversample F]
 #       [--seeds GENIE,MERGE,NUWRO] [--soft-fail]
 #
-#   FCL        step-A fcl, e.g. extgen_requests_nuwro_bnb_run4c.fcl
+#   FCL        step-A fcl, e.g. extgen_requests_nuwro_bnb.fcl
 #   N          step-A events (= interactions, one per subrun); must be at least
 #              the number of EXT events in an input file, as EXT events left
 #              over when the generator events run out are dropped; or auto

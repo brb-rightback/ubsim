@@ -64,7 +64,7 @@
     <inputdef>&ext_samdef;</inputdef>
 
     <!-- setup for steps A-D; the tarball and tables are read from uboonedata -->
-    <initscript>extgen_gibuu_grid_init.sh --stepa-fcl extgen_requests_bnb_run4c.fcl --nevents auto --gibuu-tarball &gibuu_tar; --gibuu-md5 &gibuu_md5; --tables &tables; --allow-build-mismatch --soft-fail</initscript>
+    <initscript>extgen_gibuu_grid_init.sh --stepa-fcl extgen_requests_bnb.fcl --nevents auto --gibuu-tarball &gibuu_tar; --gibuu-md5 &gibuu_md5; --tables &tables; --allow-build-mismatch --soft-fail</initscript>
 
     <!-- EXT file into the job, then steps A-D with N = its events -->
     <fcl>extgen_ext_copy.fcl

@@ -1,5 +1,5 @@
 #
-# ExtGen production step A, NuMI FHC: extgen_requests_bnb_run4c.fcl with the
+# ExtGen production step A, NuMI FHC: extgen_requests_bnb.fcl with the
 # generator settings of standard_overlay_gen_numi_griddriver_fhc.fcl (dk2nu
 # flux, microboone-numi-v2 location, NuMI spill timing), except the spill size:
 # one interaction per event, as the BNB fcls, not that fcl's fixed POT per spill.
@@ -9,7 +9,7 @@
 # above it never interact, so the sample covers E < 8 GeV with correct POT.
 # The process name stays ExtGenRequests (read by name in extgen_merge.fcl).
 
-#include "extgen_requests_bnb_run4c.fcl"
+#include "extgen_requests_bnb.fcl"
 
 physics.producers.generator:                  @local::standard_genie
 physics.producers.generator.POTPerSpill:      0

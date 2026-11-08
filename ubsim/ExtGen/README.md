@@ -28,7 +28,7 @@ area.
 | `gxml/` | GENIE configuration, installed to `$UBSIM_DIR/gxml`: the tunes `GB25_05a_00_000` (GiBUU) and `NW25_11a_00_000` (NuWro), identical apart from their name, which ties a spline file to one generator (all tune files in `GB25_05a/` and `NW25_11a/`: a `_00_000` tune is "configuration only" to GENIE, which never reads a `GB25_05a_00_000/` subdirectory) plus overriding copies of GENIE's `master_config.xml`, `EventGenerator.xml` and `EventGeneratorListAssembler.xml`. **This directory must only be on `GXMLPATH` for ExtGen jobs, never on `FW_SEARCH_PATH`.** Regenerate the copies with `gxml/make_extgen_gxml.sh` when the GENIE version changes. |
 | `Modules/` | art modules: `ExtGenRequestDumper` (step B; writes `requests.txt`, checking each `MCTruth` against its `GTruth`), `ExtGenMerge` (step D), and for the GENIE closure test `ExtGenTruthServer`, `ExtGenClosureCheck` and `ExtGenMixCheck`. Library `ubsim_ExtGen_Modules` (`ExtGenIO`): request and served-event file formats and the generator-to-detector rotation. |
 | `tools/` | Offline scripts: `extgen_make_splines.py` (cross section table to GENIE spline XML), `extgen_placeholder_xsec.py` (fake cross sections for tests), `extgen_request_summary.py` (checks a request file and summarises targets, flavours, energies and vertices), `extgen_gibuu_scan_jobs.py` (job list of the GiBUU scan campaign), `extgen_gibuu_tables.py` (merges scans into the cross-section and Max tables), `extgen_gibuu_v3_compare.py` (V3), `extgen_gibuu_v4_summary.py` (V4 over a production; reads NuWro jobs' reports too) and `extgen_v5_compare.py` (V5, truth-level sample comparison after reco2); for NuWro `extgen_nuwro_scan_jobs.py` and `extgen_nuwro_tables.py`. |
-| `job/` | fcl files: `extgen_modules.fcl` (module prologs), `extgen_requests_test_bnb.fcl` (step A test), `extgen_dump_requests.fcl` (step B), `extgen_merge.fcl` (step D, also writes the per-event POT `potinevent:SubRunPOT`), `extgen_overlay_SimInfoMixer.fcl` (overlay on EXT, exact POT per mixed event), `extgen_closure_*.fcl` (GENIE closure test); step A of production: `extgen_requests_{bnb_run4c,bnb_run4a,numi_fhc,numi_rhc}.fcl` (GiBUU tune) and `extgen_requests_nuwro_*.fcl` (the same with the NuWro tune, `extgen_genie_nuwro.fcl`). |
+| `job/` | fcl files: `extgen_modules.fcl` (module prologs), `extgen_requests_test_bnb.fcl` (step A test), `extgen_dump_requests.fcl` (step B), `extgen_merge.fcl` (step D, also writes the per-event POT `potinevent:SubRunPOT`), `extgen_overlay_SimInfoMixer.fcl` (overlay on EXT, exact POT per mixed event), `extgen_closure_*.fcl` (GENIE closure test); step A of production: `extgen_requests_{bnb,bnb_run4a,numi_fhc,numi_rhc}.fcl` (`bnb` = run 4c and every BNB period except 4a) (GiBUU tune) and `extgen_requests_nuwro_*.fcl` (the same with the NuWro tune, `extgen_genie_nuwro.fcl`). |
 | `generators/gibuu/` | `build_gibuu.sh`: builds GiBUU for grid jobs from a commit of the MicroBooNE GiBUU repository (official release on `main`, MicroBooNE patches such as request mode on `v08_00_00_br`); run by hand in SL7. `extgen_gibuu_card.sh`: the GiBUU card of every ExtGen GiBUU run (one set of physics settings). `extgen_gibuu_scan.sh`: one scan (request mode 2) for the tables; `extgen_gibuu_energies.txt`: its energy grid. `make_gibuu_tarball.sh` and `extgen_gibuu_scan_grid.sh`: the grid scan campaign. `extgen_gibuu_convert`: GiBUU request-mode output to `served_events.txt` and `trial_stats.txt` (step C). `extgen_gibuu_serve.sh`: step C for one job's requests. `extgen_gibuu_xsec_check.sh`: in-job cross-section check (V4). `extgen_gibuu_grid_init.sh`: the project.py `<initscript>` of production jobs (steps A–D, leaving `genfile.root.local` for `extgen_overlay_SimInfoMixer.fcl`). |
 | `generators/nuwro/` | NuWro route (NuWro branch `v08_00_00_br`, program `nuwro_extgen`): `build_nuwro.sh` (SL7, e26 ROOT/Pythia6), `make_nuwro_tarball.sh`, `extgen_nuwro_run.sh` (runs NuWro in a clean e26 environment), `extgen_nuwro_card.sh`, `extgen_nuwro_scan.sh` + `extgen_nuwro_scan_grid.sh` + `extgen_nuwro_energies.txt` (scan campaign), `extgen_nuwro_serve.sh` (step C), `extgen_nuwro_grid_init.sh` + `extgen_nuwro_grid_continue.sh` (production jobs). See "NuWro route" below. |
 | `xml/` | project.py templates for reco1, one per generator and sample: `extgen_{gibuu,nuwro}_{bnb_run4c,bnb_run4a,numi_fhc,numi_rhc}_reco1.xml`. |
@@ -158,7 +158,7 @@ Build, tables and production:
    `nuwro_<version>_<cardhash>` (first 8 hex digits of the md5 of
    `extgen_nuwro_card.sh`), into uboonedata `genie/nuwro/`.
 3. Production XMLs as for GiBUU, with `extgen_nuwro_grid_init.sh
-   --stepa-fcl extgen_requests_nuwro_bnb_run4c.fcl --nevents auto
+   --stepa-fcl extgen_requests_nuwro_bnb.fcl --nevents auto
    --nuwro-tarball ... --nuwro-md5 ... --tables genie/nuwro/<STEM>
    --soft-fail` and `<endscript>extgen_nuwro_grid_continue.sh</endscript>`.
    The job files are those of the GiBUU route (`extgen_job_summary.txt`,
@@ -180,7 +180,7 @@ sample, `extgen_<generator>_<sample>_reco1.xml`:
 
 | Sample | Templates | Step A | Chain |
 |---|---|---|---|
-| BNB run 4c (and every BNB period except 4a) | `extgen_{gibuu,nuwro}_bnb_run4c_reco1.xml` | `extgen_requests_[nuwro_]bnb_run4c.fcl` | BNB |
+| BNB run 4c (and every BNB period except 4a) | `extgen_{gibuu,nuwro}_bnb_run4c_reco1.xml` | `extgen_requests_[nuwro_]bnb.fcl` | BNB |
 | BNB run 4a | `extgen_{gibuu,nuwro}_bnb_run4a_reco1.xml` | `extgen_requests_[nuwro_]bnb_run4a.fcl` (run-4a flux set) | BNB |
 | NuMI FHC, RHC | `extgen_{gibuu,nuwro}_numi_{fhc,rhc}_reco1.xml` | `extgen_requests_[nuwro_]numi_{fhc,rhc}.fcl` (dk2nu flux, NuMI timing) | NuMI: `wirecell_detsim_overlay_numi_uboone.fcl`, `standard_overlay_numi_uboone.fcl`, `reco_uboone_mcc9_8_driver_overlay_numi_stage1c.fcl` |
 
@@ -193,7 +193,7 @@ NuMI templates have not been run yet.
 |---|---|---|
 | initscript | `extgen_gibuu_grid_init.sh --nevents auto --soft-fail ...`: checks the GiBUU tarball (md5), the tables (same GiBUU build and card as the tarball and this ubsim), draws the job's seeds | before SAM |
 | stage 0 | `extgen_ext_copy.fcl`: copies the job's EXT file into the job | lar |
-| its endscript | `extgen_gibuu_grid_continue.sh`: N = EXT events (checked against sam `event_count`); steps A–D: N GENIE requests (`extgen_requests_bnb_run4c.fcl`), request file, GiBUU serving + in-job cross-section check (V4), merge → `genfile.root.local` | shell |
+| its endscript | `extgen_gibuu_grid_continue.sh`: N = EXT events (checked against sam `event_count`); steps A–D: N GENIE requests (`extgen_requests_bnb.fcl`), request file, GiBUU serving + in-job cross-section check (V4), merge → `genfile.root.local` | shell |
 | stages 1… | `extgen_overlay_SimInfoMixer.fcl`, g4, detsim, overlay, reco1 1a/1b/1c | lar |
 
 **reco2 job** (v10_04_07_26): the MCC10 reco2 workflow, with the standard
@@ -212,7 +212,7 @@ beams, on top of the `--stepa-fcl` settings. Add them to the XML's `<initscript>
 The cross-section tables do not change: they hold every channel. POT stays exact: GENIE's flux drivers count the POT of the rays they
 skip, and `--current` selects GENIE's generator list `ExtGenCC` or `ExtGenNC` (`gxml/EventGeneratorListAssembler.xml`).
 
-Ready-made step-A fcls: `extgen_requests_[nuwro_]{bnb_run4c,bnb_run4a,numi_fhc,numi_rhc}_{nue,ncpi0,ccpi0}.fcl`.
+Ready-made step-A fcls: `extgen_requests_[nuwro_]{bnb,bnb_run4a,numi_fhc,numi_rhc}_{nue,ncpi0,ccpi0}.fcl`.
 
 | Sample | Step A | `<initscript>` additions | Mixer stage fcl |
 |---|---|---|---|

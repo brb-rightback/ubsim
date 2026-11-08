@@ -66,7 +66,7 @@
     <inputdef>&ext_samdef;</inputdef>
 
     <!-- setup for steps A-D; the tarball and tables are read from uboonedata -->
-    <initscript>extgen_nuwro_grid_init.sh --stepa-fcl extgen_requests_nuwro_bnb_run4c.fcl --nevents auto --nuwro-tarball &nuwro_tar; --nuwro-md5 &nuwro_md5; --tables &tables; --soft-fail</initscript>
+    <initscript>extgen_nuwro_grid_init.sh --stepa-fcl extgen_requests_nuwro_bnb.fcl --nevents auto --nuwro-tarball &nuwro_tar; --nuwro-md5 &nuwro_md5; --tables &tables; --soft-fail</initscript>
 
     <!-- EXT file into the job, then steps A-D with N = its events -->
     <fcl>extgen_ext_copy.fcl
