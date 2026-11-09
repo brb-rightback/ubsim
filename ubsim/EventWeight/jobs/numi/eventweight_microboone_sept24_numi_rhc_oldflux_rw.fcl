@@ -10,6 +10,11 @@ BEGIN_PROLOG
 #include "eventweight_microboone_xs.fcl"
 #include "ppfx_numi_reweight_sept24_rhc.fcl"
 
+# USE ONLY WHEN WORKING FROM OLD FLUX FILES AND
+# # RUNNING WITH MODERN PPFX (TUNED TO G4.10.4)
+# # THIS REWEIGHTS THE OLD FLUX PREDICTION TO THE NEW G4 VERSION
+# # AND THEN CALCULATES THE MODERN PPFX WEIGHT
+
 microboone_eventweight_sept24_oldflux: {
   module_type: "EventWeight"
  
