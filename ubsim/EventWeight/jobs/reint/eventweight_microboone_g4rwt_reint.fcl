@@ -21,9 +21,9 @@ BEGIN_PROLOG
 
 microboone_eventweight_reint: {
   weight_functions_reint: [ 
-    #reinteractions_piplus, reinteractions_piminus, reinteractions_proton,
-    #reinteractions_kplus, reinteractions_kminus, reinteractions_neutron
-    reinteractions_neutron
+    reinteractions_piplus, reinteractions_piminus, reinteractions_proton,
+    reinteractions_kplus, reinteractions_kminus, reinteractions_neutron
+    #reinteractions_neutron
   ]
   
   reinteractions_piplus: {
