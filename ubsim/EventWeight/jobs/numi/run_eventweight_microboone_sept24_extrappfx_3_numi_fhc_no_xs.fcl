@@ -1,0 +1,41 @@
+# ExtGen (GiBUU/NuWro) NuMI FHC samples: extra PPFX universes, pass 3 of 5.
+# The PPFX part of run_eventweight_microboone_sept24_extragenieall_3_numi_fhc.fcl
+# (same process name and seeds) without the GENIE "All" universes, run on top of
+# run_eventweight_microboone_sept24_numi_fhc_no_xs.fcl. That fcl gives ppfx_cv, the first
+# 100 PPFX universes and the reinteraction universes; passes 1-5 add 100 PPFX universes each,
+# for the 600 of the GENIE NuMI overlays (ppfx_all in the PeLEE ntuple, which reads the
+# processes EventWeightSep24ExtraGENIE1-5). The individual ppfx_* knobs of each pass are
+# also stored.
+# Run after run_redk2nu_fhc.fcl: PPFX needs the Dk2Nu that the overlay mixer drops.
+
+#include "run_eventweight_microboone_sept24_numi_fhc_no_xs.fcl"
+
+process_name: EventWeightSep24ExtraGENIE3
+
+outputs: {
+ out1: {
+   module_type: RootOutput
+   fileName: "%ifb_extrappfx3.root"
+   dataTier: "detector-simulated"
+   compressionLevel: 1
+ }
+}
+
+physics.producers.eventweightSep24.weight_functions: [ ppfx_ms, ppfx_mipppi, ppfx_mippk, ppfx_thinmes, ppfx_thinpi,
+    ppfx_other, ppfx_thinnpi, ppfx_totabs, ppfx_targatt, ppfx_thinna,
+    ppfx_think, ppfx_thinn ]
+
+# PPFX seeds as in the extragenieall_3 fcl (there the ppfx_thinnpi seed is set as
+# "ppfx_thinnp", so it is not applied; here it is)
+physics.producers.eventweightSep24.ppfx_mipppi.random_seed: 3851
+physics.producers.eventweightSep24.ppfx_mippk.random_seed: 86951
+physics.producers.eventweightSep24.ppfx_thinmes.random_seed: 46914
+physics.producers.eventweightSep24.ppfx_thinpi.random_seed: 90810
+physics.producers.eventweightSep24.ppfx_other.random_seed: 12712
+physics.producers.eventweightSep24.ppfx_thinnpi.random_seed: 4668
+physics.producers.eventweightSep24.ppfx_totabs.random_seed: 9463
+physics.producers.eventweightSep24.ppfx_targatt.random_seed: 4023
+physics.producers.eventweightSep24.ppfx_thinna.random_seed: 1401
+physics.producers.eventweightSep24.ppfx_think.random_seed: 1401
+physics.producers.eventweightSep24.ppfx_thinn.random_seed: 628
+physics.producers.eventweightSep24.ppfx_ms.random_seed: 684
