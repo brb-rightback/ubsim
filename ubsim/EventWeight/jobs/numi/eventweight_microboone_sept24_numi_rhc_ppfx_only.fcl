@@ -1,0 +1,23 @@
+BEGIN_PROLOG
+
+#include "ppfx_numi_reweight_sept24_rhc.fcl"
+
+microboone_eventweight_sept24: {
+  module_type: "EventWeight"
+ 
+  # Throw exception if weight outside limits
+  min_weight: 0
+  max_weight: 1000
+
+  genie_module_label: generator
+ 
+  # Load calculator configurations
+  @table::reweight_numi_ppfx
+}
+
+# All available weight functions
+microboone_eventweight_sept24.weight_functions: [
+  ppfx_cv
+]
+
+END_PROLOG
