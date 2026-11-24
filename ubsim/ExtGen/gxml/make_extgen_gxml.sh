@@ -12,10 +12,10 @@
 #   EventGeneratorListAssembler.xml      + generator lists "ExtGenCC", "ExtGenNC"
 #   <tune>/ModelConfiguration.xml        G18_10a copy + XSecModel for ExtGenRequest
 #   <tune>/CommonParam.xml               G18_10a_02_11a copy + "ExtGen" param set
-# for each ExtGen tune: GB25_05a (GiBUU 2025), NW25_11a (NuWro 25.11). The
-# tunes differ only in name (and their hand-written TuneGeneratorList.xml),
-# so splines of the two generators can never be mixed up: a spline file is
-# valid for one tune name only.
+# for each ExtGen tune: GB25_05a (GiBUU 2025), NW25_11a (NuWro 25.11),
+# NE06_02a (NEUT 6.2). The tunes differ only in name (and their hand-written
+# TuneGeneratorList.xml), so splines of different generators can never be
+# mixed up: a spline file is valid for one tune name only.
 #
 # The tune GB25_05a_00_000 has tuned-parameter set "00", which GENIE treats as
 # "configuration only" (TuneId::OnlyConfiguration): it never searches the
@@ -35,7 +35,7 @@ OUT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # The ExtGen tune is built on top of the G18_10a_02_11a configuration files.
 SRC_CMC=G18_10a
 SRC_TUNE=G18_10a_02_11a
-TUNE_DIRS="GB25_05a NW25_11a"
+TUNE_DIRS="GB25_05a NW25_11a NE06_02a"
 
 for f in master_config.xml EventGenerator.xml EventGeneratorListAssembler.xml \
          $SRC_CMC/ModelConfiguration.xml $SRC_CMC/$SRC_TUNE/CommonParam.xml; do

@@ -1,6 +1,6 @@
 # ExtGen: external neutrino generators through GENIE's flux and geometry drivers
 
-ExtGen runs neutrino interactions from an external generator (GiBUU; NuWro)
+ExtGen runs neutrino interactions from an external generator (GiBUU; NuWro; NEUT)
 with exactly the flux, geometry, vertex distribution and POT accounting of a
 standard MicroBooNE GENIE overlay:
 
@@ -11,7 +11,8 @@ standard MicroBooNE GENIE overlay:
    record holds only the neutrino and the target.
 2. **Step B.** `ExtGenRequestDumper` (`job/extgen_dump_requests.fcl`) writes
    the requests to a text file, one line per `MCTruth`.
-3. **Step C.** The external generator, patched with a "request mode", makes
+3. **Step C.** The external generator, patched with a "request mode" (NEUT:
+   driven unchanged through its own interface for external drivers), makes
    one unweighted event at exactly each requested energy and current.
 4. **Step D.** `ExtGenMerge` rotates each final state onto its neutrino
    direction, places it at the vertex and writes standard
@@ -25,15 +26,16 @@ area.
 | Directory | What it holds |
 |---|---|
 | `GENIE/` | GENIE plugin library `ubsim_ExtGen_GENIE`: `genie::ubext::ExtGenPXSec` (total cross sections) and `genie::ubext::ExtGenInteractionListGenerator` (one CC and one NC interaction per initial state). GENIE finds them through their ROOT dictionary. |
-| `gxml/` | GENIE configuration, installed to `$UBSIM_DIR/gxml`: the tunes `GB25_05a_00_000` (GiBUU) and `NW25_11a_00_000` (NuWro), identical apart from their name, which ties a spline file to one generator (all tune files in `GB25_05a/` and `NW25_11a/`: a `_00_000` tune is "configuration only" to GENIE, which never reads a `GB25_05a_00_000/` subdirectory) plus overriding copies of GENIE's `master_config.xml`, `EventGenerator.xml` and `EventGeneratorListAssembler.xml`. **This directory must only be on `GXMLPATH` for ExtGen jobs, never on `FW_SEARCH_PATH`.** Regenerate the copies with `gxml/make_extgen_gxml.sh` when the GENIE version changes. |
+| `gxml/` | GENIE configuration, installed to `$UBSIM_DIR/gxml`: the tunes `GB25_05a_00_000` (GiBUU), `NW25_11a_00_000` (NuWro) and `NE06_02a_00_000` (NEUT), identical apart from their name, which ties a spline file to one generator (all tune files in `GB25_05a/`, `NW25_11a/` and `NE06_02a/`: a `_00_000` tune is "configuration only" to GENIE, which never reads a `GB25_05a_00_000/` subdirectory) plus overriding copies of GENIE's `master_config.xml`, `EventGenerator.xml` and `EventGeneratorListAssembler.xml`. **This directory must only be on `GXMLPATH` for ExtGen jobs, never on `FW_SEARCH_PATH`.** Regenerate the copies with `gxml/make_extgen_gxml.sh` when the GENIE version changes. |
 | `Modules/` | art modules: `ExtGenRequestDumper` (step B; writes `requests.txt`, checking each `MCTruth` against its `GTruth`), `ExtGenMerge` (step D), and for the GENIE closure test `ExtGenTruthServer`, `ExtGenClosureCheck` and `ExtGenMixCheck`. Library `ubsim_ExtGen_Modules` (`ExtGenIO`): request and served-event file formats and the generator-to-detector rotation. |
 | `tools/` | Offline scripts: `extgen_make_splines.py` (cross section table to GENIE spline XML), `extgen_placeholder_xsec.py` (fake cross sections for tests), `extgen_request_summary.py` (checks a request file and summarises targets, flavours, energies and vertices), `extgen_gibuu_scan_jobs.py` (job list of the GiBUU scan campaign), `extgen_gibuu_tables.py` (merges scans into the cross-section and Max tables), `extgen_gibuu_v3_compare.py` (V3), `extgen_gibuu_v4_summary.py` (V4 over a production; reads NuWro jobs' reports too) and `extgen_v5_compare.py` (V5, truth-level sample comparison after reco2); for NuWro `extgen_nuwro_scan_jobs.py` and `extgen_nuwro_tables.py`. |
-| `job/` | fcl files: `extgen_modules.fcl` (module prologs), `extgen_requests_test_bnb.fcl` (step A test), `extgen_dump_requests.fcl` (step B), `extgen_merge.fcl` (step D, also writes the per-event POT `potinevent:SubRunPOT`), `extgen_overlay_SimInfoMixer.fcl` (overlay on EXT, exact POT per mixed event), `extgen_closure_*.fcl` (GENIE closure test); step A of production: `extgen_requests_{bnb,bnb_run4a,numi_fhc,numi_rhc}.fcl` (`bnb` = run 4c and every BNB period except 4a) (GiBUU tune) and `extgen_requests_nuwro_*.fcl` (the same with the NuWro tune, `extgen_genie_nuwro.fcl`). |
+| `job/` | fcl files: `extgen_modules.fcl` (module prologs), `extgen_requests_test_bnb.fcl` (step A test), `extgen_dump_requests.fcl` (step B), `extgen_merge.fcl` (step D, also writes the per-event POT `potinevent:SubRunPOT`), `extgen_overlay_SimInfoMixer.fcl` (overlay on EXT, exact POT per mixed event), `extgen_closure_*.fcl` (GENIE closure test); step A of production: `extgen_requests_{bnb,bnb_run4a,numi_fhc,numi_rhc}.fcl` (`bnb` = run 4c and every BNB period except 4a) (GiBUU tune) `extgen_requests_nuwro_*.fcl` (the same with the NuWro tune, `extgen_genie_nuwro.fcl`) and `extgen_requests_neut_*.fcl` (NEUT tune, `extgen_genie_neut.fcl`). |
 | `generators/gibuu/` | `build_gibuu.sh`: builds GiBUU for grid jobs from a commit of the MicroBooNE GiBUU repository (official release on `main`, MicroBooNE patches such as request mode on `v08_00_00_br`); run by hand in SL7. `extgen_gibuu_card.sh`: the GiBUU card of every ExtGen GiBUU run (one set of physics settings). `extgen_gibuu_scan.sh`: one scan (request mode 2) for the tables; `extgen_gibuu_energies.txt`: its energy grid. `make_gibuu_tarball.sh` and `extgen_gibuu_scan_grid.sh`: the grid scan campaign. `extgen_gibuu_convert`: GiBUU request-mode output to `served_events.txt` and `trial_stats.txt` (step C). `extgen_gibuu_serve.sh`: step C for one job's requests. `extgen_gibuu_xsec_check.sh`: in-job cross-section check (V4). `extgen_gibuu_grid_init.sh`: the project.py `<initscript>` of production jobs (steps A–D, leaving `genfile.root.local` for `extgen_overlay_SimInfoMixer.fcl`). |
 | `generators/nuwro/` | NuWro route (NuWro branch `v08_00_00_br`, program `nuwro_extgen`): `build_nuwro.sh` (SL7, e26 ROOT/Pythia6), `make_nuwro_tarball.sh`, `extgen_nuwro_run.sh` (runs NuWro in a clean e26 environment), `extgen_nuwro_card.sh`, `extgen_nuwro_scan.sh` + `extgen_nuwro_scan_grid.sh` + `extgen_nuwro_energies.txt` (scan campaign), `extgen_nuwro_serve.sh` (step C), `extgen_nuwro_grid_init.sh` + `extgen_nuwro_grid_continue.sh` (production jobs). See "NuWro route" below. |
-| `xml/` | project.py templates for reco1, one per generator and sample: `extgen_{gibuu,nuwro}_{bnb_run4c,bnb_run4a,numi_fhc,numi_rhc}_reco1.xml`. |
+| `generators/neut/` | NEUT route (NEUT 6.2 unmodified; ExtGen's driver `neut_extgen.cc`): `build_neut.sh` (SL7, e26 ROOT; NEUT from one commit plus the driver), `make_neut_tarball.sh`, `extgen_neut_run.sh` (runs NEUT in a clean e26 environment), `extgen_neut_card.sh`, `extgen_neut_tables.sh` + `extgen_neut_energies.txt` + `extgen_neut_pb_energies.txt` (cross-section tables, no scan campaign), `extgen_neut_serve.sh` (step C), `extgen_neut_v3.sh` (V3), `extgen_neut_grid_init.sh` + `extgen_neut_grid_continue.sh` (production jobs). See "NEUT route" below. |
+| `xml/` | project.py templates for reco1, one per generator and sample: `extgen_{gibuu,nuwro,neut}_{bnb_run4c,bnb_run4a,numi_fhc,numi_rhc}_reco1.xml`. |
 
-Cross section splines for production live in uboonedata, under `genie/gibuu/` (and `genie/nuwro/`).
+Cross section splines for production live in uboonedata, under `genie/gibuu/` (and `genie/nuwro/`, `genie/neut/`).
 
 ## Phase-1 test (GENIE side only)
 
@@ -172,6 +174,89 @@ stock` (NuWro's own `test_events` and `real_events`, as stock `NuWro::main`);
 both samples are compared by `extgen_served_compare.py` (any two served-event
 files: cross section, process, struck nucleon, multiplicities, lepton
 kinematics, Q², leading proton, hadronic energy; the tests of GiBUU's V3).
+
+## NEUT route
+
+The same chain with NEUT 6.2 (LTS/6.2, tag 6.2.3) as the external generator.
+NEUT is not changed: ExtGen's driver `neut_extgen` (`generators/neut/neut_extgen.cc`)
+uses NEUT's own interface for external drivers (`libNEUTGenIFace`, `neutgen.h`:
+total cross section and one interaction at a given neutrino momentum and
+nucleus). Everything from step A to the mixer is shared; the differences:
+
+* **Program.** One `neut_extgen -m serve` process per job serves every
+  request (any target, neutrino and current): NEUT sets the nucleus per call,
+  and the current is chosen with NEUT's per-mode scale factors
+  (`crsneut`/`crsneutb`), which NEUT applies to its total cross section and to
+  each event's mode choice alike; the CC and NC sets are found at start-up
+  from NEUT's own mode table (`necrsmode`). NEUT events are unweighted at a
+  given energy, so there are no Max tables. It writes `served_events.txt`
+  (particle status rules of NEUT's NuHepMC writer; the 2p2h nucleon pair as
+  one status-11 cluster, as GENIE) and `trial_stats.txt` itself. Seeds go in
+  through NEUT's seed file (`rng_seed = "file"`, `RANFILE`), derived from the
+  job seed. Start-up ~1 s, ~3 ms per event.
+* **Environment.** NEUT needs ROOT and the gcc 12 runtime; it is built with
+  e26 (`root v6_28_12 -q e26:p3915:prof`, recorded in `BUILD_INFO`) and always
+  run through `extgen_neut_run.sh` (clean e26 environment, as NuWro). NEUT's
+  default settings come from `share/neut/Cards/NEUT.Defaults.toml` of the
+  build (its sha1 is in `BUILD_INFO`). NEUT's `libNEUTsmpl` enables
+  floating-point traps (invalid, divide by zero, overflow) as in stock
+  `neutroot2`; a crash prints a backtrace (exit 4).
+* **Card.** `extgen_neut_card.sh`: NEUT defaults, except QE = the Nieves
+  model (local Fermi gas with RPA; NEUT's default spectral function exists for
+  C12, O16 and Fe56 only, and NEUT silently falls back to RFG elsewhere,
+  argon included) with M_A = 1.05 GeV, the value of the Nieves 1p1h tables
+  NEUT ships (any other value makes NEUT recompute them at start-up, ~30 min
+  per nucleus). 2p2h: NEUT default (Nieves hadron tensors, 3p3h on).
+* **Targets.** NEUT has no Fermi-gas parameters for Mg (Z = 12) and no Nieves
+  1p1h tables for A = 24 and 39: Mg24 is generated as Na23 and K39 as Ar40,
+  with the neighbour's cross section per nucleon times the requested A (both
+  small: cryostat materials and dirt). The free neutron of the geometry's
+  `Vacuum` cannot be a NEUT target: its spline is an explicit zero. Coherent
+  and diffractive modes are off on H1 (GENIE has none on free nucleons).
+* **Pauli blocking.** NEUT Pauli-blocks the nucleon of single-pion events
+  after choosing the mode and writes such an event without final state; what
+  stock NEUT predicts is σ × (1 − f_PB). The tables are σ_NEUT × (1 − f_PB),
+  f_PB measured with NEUT events (`-b` events at each energy of
+  `extgen_neut_pb_energies.txt`, interpolated; about 1% of all events on
+  argon at 1–4 GeV), and serving drops blocked events (`n_dropped`). V4
+  checks the cross section and the blocking separately: `extgen_neut_serve.sh
+  -x TABLE` (the grid jobs pass it) writes `trial_stats.txt` with one trial
+  per request of weight σ_NEUT(E) × (1 − f_PB of the table), so V4 compares
+  the job's NEUT cross section with the table, and checks the number of
+  blocked events against Σ f/(1 − f) (`pauli_blocking ... pull` in
+  `extgen_serve_summary.txt` and the job summary; warning beyond 4).
+  neut_extgen's own statistics stay in `trial_stats_neut.txt` (job log
+  tarball): from them alone, with one trial per request, V4 cannot see the
+  binomial fluctuation of the blocking and flags small channels.
+
+Build, tables and production:
+
+1. Build in SL7 from a fresh shell: `NEUT_REPO=<neut clone> NEUT_REF=6.2.3
+   build_neut.sh <build_dir>` (NEUT's CMake downloads its dependencies from
+   GitHub; NuHepMC output off); pack: `make_neut_tarball.sh <build_dir>
+   neut_<version>_<cardhash>.tar.gz`.
+2. Tables: `extgen_neut_tables.sh -d <build_dir or unpacked tarball> -o OUT
+   [-b 4000] [-j 8]` (~4 CPU-hours at `-b 4000`): `STEM_xsec.txt` (with
+   rel_err: the f_PB statistics, the interpolation error between the 280
+   energies, and NEUT's single precision) and `STEM_xsec.xml` (tune
+   `NE06_02a_00_000`), STEM = `neut_<version>_<cardhash>` (first 8 hex
+   digits of the md5 of `extgen_neut_card.sh`), into uboonedata `genie/neut/`.
+3. Production XMLs (`xml/extgen_neut_*_reco1.xml`) with
+   `extgen_neut_grid_init.sh --stepa-fcl extgen_requests_neut_bnb.fcl
+   --nevents auto --neut-tarball ... --neut-md5 ... --tables genie/neut/<STEM>
+   --soft-fail` and `<endscript>extgen_neut_grid_continue.sh</endscript>`.
+
+Validation V3 (request mode against stock NEUT, same card, one fixed energy):
+`extgen_neut_v3.sh -d <unpacked tarball> -t TARGET -n NU -c CC|NC -E E_GeV -N
+20000 -s SEED -o OUT`. Stock NEUT (`neutroot2`, all modes) is converted by
+`neut_extgen -m convert` with the same particle rules and filtered to the
+requested current; `extgen_served_compare.py` compares the samples, and the
+Pauli-blocked fractions are compared too. Stock and request mode differ in
+one known detail: NEUT's driver interface sets the nucleus per call
+(`SetTargetZA`), which takes the initial-state potential from NEUT's table
+(Ar40: 30 MeV) where a stock card run recomputes it from the Fermi momentum
+(29.4 MeV); no difference is visible in V3 (2026-11-24: Ar40 numu CC 1 GeV,
+numubar CC 2 GeV, numu NC 1 GeV, 12000–30000 events each, all tests p > 0.02).
 
 ## Production (grid)
 

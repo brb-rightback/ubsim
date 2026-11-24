@@ -1,0 +1,14 @@
+#
+# ExtGen production step A with NEUT: extgen_requests_bnb.fcl (flux,
+# geometry, spill timing and POT as for GiBUU) with the NEUT tune
+# NE06_02a_00_000, i.e. NEUT's total cross sections (splines set by
+# extgen_neut_grid_init.sh). The process name stays ExtGenRequests (read by
+# name in extgen_merge.fcl).
+
+#include "extgen_genie_neut.fcl" 
+#include "extgen_requests_bnb.fcl"
+
+physics.producers.generator.TuneName:           @local::extgen_neut_tune
+physics.producers.generator.GXMLPATH:           @local::extgen_neut_gxmlpath
+physics.producers.generator.EventGeneratorList: @local::extgen_neut_eventgenlist
+physics.producers.generator.XSecTable:          "set_by_extgen_neut_grid_init.xml"

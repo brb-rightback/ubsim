@@ -1,0 +1,21 @@
+#
+# GENIE settings shared by all ExtGen NEUT request jobs (ubsim/ExtGen).
+#
+# GENIE selects neutrino, target, current, energy and vertex with NEUT's
+# total cross sections (tune NE06_02a_00_000); the final state is produced
+# later by NEUT (neut_extgen). The GENIE configuration is the one of the
+# GiBUU tune (extgen_genie_gibuu.fcl) under another name, so that NEUT and
+# GiBUU spline files can never be mixed up.
+#
+# Usage, with a GENIEGen module as physics.producers.generator:
+#   physics.producers.generator.TuneName:           @local::extgen_neut_tune
+#   physics.producers.generator.GXMLPATH:           @local::extgen_neut_gxmlpath
+#   physics.producers.generator.EventGeneratorList: @local::extgen_neut_eventgenlist
+
+BEGIN_PROLOG
+
+extgen_neut_tune:         "NE06_02a_00_000"
+extgen_neut_gxmlpath:     "$UBSIM_DIR/gxml"
+extgen_neut_eventgenlist: "Default"
+
+END_PROLOG
